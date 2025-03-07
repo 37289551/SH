@@ -2,13 +2,17 @@
   "spider": "http://cdn.qiaoji8.com/fix250304.jar;md5;9d8407a76b2abeeaabdd147b1b93799f",
   "wallpaper": "https://bing.img.run/uhd.php",
   "lives": [
-   {
-     "name":"春风直播",
-     "type":0,
-     "url":"https://ghproxy.net/raw.githubusercontent.com/PizazzGY/TV/master/output/user_result.txt",
-     "playerType":2,
-     "timeout":10
-   },
+    {
+      "group": "redirect",
+      "channels": [
+        {
+          "name": "live",
+          "urls": [
+            "https://github.moeyy.xyz/https://raw.githubusercontent.com/wwb521/live/main/tv.m3u"
+          ]
+        }
+      ]
+    }
   ]
     
   "sites": [
