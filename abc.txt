@@ -27,6 +27,7 @@ CGTN,http://39.134.87.62/000000001000/4810873738577663591/index.m3u8
 东方影视,http://39.134.87.62/000000001000/5000000010000032212/index.m3u8
 东方财经,http://39.134.87.62/000000001000/5000000007000010003/index.m3u8
 金色学堂,http://39.134.87.62/000000001000/5000000010000026105/index.m3u8
+法治天地,http://39.134.87.62/000000001000/9001547084732463424/index.m3u8
 
 卫视频道,#genre#
 东方卫视,http://39.134.87.62/000000001000/5000000010000032246/index.m3u8
@@ -64,6 +65,17 @@ CGTN,http://39.134.87.62/000000001000/4810873738577663591/index.m3u8
 都市剧场,#genre#
 欢笑剧场,http://39.134.87.62/000000001000/5000000002000009455/index.m3u8
 都市剧场,http://39.134.87.62/000000001000/5000000011000031111/index.m3u8
-纪实人文,http://39.134.87.62/000000001000/5000000001000021713/index.m3u8
-法治天地,http://39.134.87.62/000000001000/9001547084732463424/index.m3u8
 
+特区频道,#genre#
+凤凰卫视,http://223.110.245.139/ott.js.chinamobile.com/PLTV/3/224/3221226922/index.m3u8
+凤凰卫视,http://198.16.100.186:8278/phoenixtv_hd/playlist.m3u8?tid=MF6F2163882521638825&ct=19249&tsum=2375037c2689c4190d14c8a52bc35c83
+莲花卫视,http://1033946631.cloudvdn.com/a.m3u8?domain=live-hdl.macaulotustv.com&player=1&streamid=lotustv:lotustv/macaulotustv&v3=1
+莲花卫视,http://8.138.7.223/tv/lotustv.m3u8
+新加坡中文,https://d2e1asnsl7br7b.cloudfront.net/7782e205e72f43aeb4a48ec97f66ebbe/index_4.m3u8?zshijd
+台湾Plus,https://bcovlive-a.akamaihd.net/rce33d845cb9e42dfa302c7ac345f7858/ap-northeast-1/ap-northeast-1/6282251407001/profile_0/chunklist.m3u8
+CNN,https://turnerlive.warnermediacdn.com/hls/live/586495/cnngo/cnn_slate/VIDEO_4_1064000.m3u8
+BBC,https://vs-hls-push-ww-live.akamaized.net/x=4/i=urn:bbc:pips:service:bbc_news_channel_hd/t=3840/v=pv14/b=5070016/main.m3u8
+BBC2,http://198.16.100.186:8278/bbc2_antik/playlist.m3u8?tid=MABA3261818232618182&ct=19254&tsum=3aebf2128ba27b23c78bfd4160c63750
+SkyNews,http://38b891c9.rossteleccom.net/iptv/SQNLRPBE7FFE8V/2475/index.m3u8
+FashionTV,http://lb.streaming.sk/fashiontv/stream/chunklist_w765383554.m3u8
+CBSNews,https://cbsn-dal.cbsnstream.cbsnews.com/out/v1/ffa98bbf7d2b4c038c229bd4d9122708/master_2.m3u8
