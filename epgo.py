@@ -124,52 +124,51 @@ def fetch_tvmao_programs_with_dynamic(soup, channel_name, url):
             logger.info("发现\"查看更多\"按钮，尝试加载更多节目")
             
             # 从URL中提取参数
-                            # URL格式：https://www.tvmao.com/program/[tc]-[cc]-w[w].html
-                            # 例如：https://www.tvmao.com/program/CCTV-CCTV1-w5.html
-                            import re
-                            match = re.match(r'.*program/([^-]+)-([^-]+)-w(\d+)\.html', url)
-                            if match:
-                                tc = match.group(1)
-                                cc = match.group(2)
-                                w = match.group(3)
-                                logger.info(f"从URL中提取到参数: tc={tc}, cc={cc}, w={w}")
-                                
-                                # 尝试从页面中提取TVM_TOKEN
-                                token = None
-                                import re
-                                token_match = re.search(r'window\["TVM_TOKEN"\]\s*=\s*["\']([^"\']+)["\']', str(soup))
-                                if not token_match:
-                                    token_match = re.search(r'TVM_TOKEN\s*=\s*["\']([^"\']+)["\']', str(soup))
-                                if token_match:
-                                    token = token_match.group(1)
-                                    logger.info(f"从页面中提取到TVM_TOKEN: {token}")
-                                else:
-                                    logger.warning(f"未从页面中找到TVM_TOKEN")
-                                
-                                # 构造动态加载请求
-                                dynamic_url = "https://www.tvmao.com/servlet/channelEpg"
-                                params = {
-                                    'tc': tc,
-                                    'cc': cc,
-                                    'w': w
-                                }
-                                
-                                # 添加token参数（如果找到）
-                                if token:
-                                    params['token'] = token
-                                
-                                logger.info(f"发送动态加载请求到: {dynamic_url}")
-                                logger.info(f"请求参数: {params}")
-                                
-                                # 发送POST请求获取动态内容
-                                response = make_request(dynamic_url, 
-                                                     headers={
-                                                         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-                                                         'Content-Type': 'application/x-www-form-urlencoded',
-                                                         'Referer': url
-                                                     },
-                                                     method='POST',
-                                                     data=params)
+            # URL格式：https://www.tvmao.com/program/[tc]-[cc]-w[w].html
+            # 例如：https://www.tvmao.com/program/CCTV-CCTV1-w5.html
+            import re
+            match = re.match(r'.*program/([^-]+)-([^-]+)-w(\d+)\.html', url)
+            if match:
+                tc = match.group(1)
+                cc = match.group(2)
+                w = match.group(3)
+                logger.info(f"从URL中提取到参数: tc={tc}, cc={cc}, w={w}")
+                
+                # 尝试从页面中提取TVM_TOKEN
+                token = None
+                token_match = re.search(r'window\["TVM_TOKEN"\]\s*=\s*["\']([^"\']+)["\']', str(soup))
+                if not token_match:
+                    token_match = re.search(r'TVM_TOKEN\s*=\s*["\']([^"\']+)["\']', str(soup))
+                if token_match:
+                    token = token_match.group(1)
+                    logger.info(f"从页面中提取到TVM_TOKEN: {token}")
+                else:
+                    logger.warning(f"未从页面中找到TVM_TOKEN")
+                
+                # 构造动态加载请求
+                dynamic_url = "https://www.tvmao.com/servlet/channelEpg"
+                params = {
+                    'tc': tc,
+                    'cc': cc,
+                    'w': w
+                }
+                
+                # 添加token参数（如果找到）
+                if token:
+                    params['token'] = token
+                
+                logger.info(f"发送动态加载请求到: {dynamic_url}")
+                logger.info(f"请求参数: {params}")
+                
+                # 发送POST请求获取动态内容
+                response = make_request(dynamic_url, 
+                                     headers={
+                                         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                                         'Content-Type': 'application/x-www-form-urlencoded',
+                                         'Referer': url
+                                     },
+                                     method='POST',
+                                     data=params)
                 
                 if response:
                     import json
