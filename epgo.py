@@ -46,80 +46,195 @@ def make_request(url, headers=None, timeout=15):
                 raise
 
 def fetch_cctv_programs(channel_id, channel_info):
-    """抓取央视频道节目单"""
+    """抓取央视频道节目单 - 支持央视官网EPG页面和备份URL"""
     try:
-        response = make_request(channel_info['url'])
+        # 处理tvmao.com URL，自动替换星期参数
+        url = channel_info['url']
+        # 获取当天星期（1-7，周一到周日）
+        today_weekday = datetime.now().isoweekday()
+        # 替换URL中的星期参数（如w1, w2等）
+        if 'tvmao.com' in url:
+            import re
+            # 替换固定的星期参数为当天星期
+            url = re.sub(r'w\d+', f'w{today_weekday}', url)
+            logger.info(f"已将tvmao.com URL替换为当天星期: {url}")
+        
+        response = make_request(url)
         response.encoding = 'utf-8'
         soup = BeautifulSoup(response.text, 'lxml')
         
         programs = []
         today = datetime.now().date()
         
-        # 适配CCTV网站实际结构 - CCTV节目单通常在特定的表格或列表中
-        # 尝试多种可能的选择器
-        program_containers = [
-            soup.find('div', class_='epg-container'),
-            soup.find('div', id='epg-content'),
-            soup.find('div', class_='program-list'),
-            soup.find('table', class_='epg-table')
-        ]
-        
-        program_items = []
-        for container in program_containers:
-            if container:
-                # 表格结构
-                if container.name == 'table':
-                    rows = container.find_all('tr')[1:]  # 跳过表头
-                    for row in rows:
-                        cells = row.find_all('td')
-                        if len(cells) >= 2:
-                            time_elem = cells[0]
-                            title_elem = cells[1]
-                            program_items.append((time_elem, title_elem))
-                else:
-                    # 列表结构
-                    items = container.find_all(['div', 'li'], recursive=True)
-                    for item in items:
-                        time_elem = item.find(['span', 'div'], class_=['time', 'program-time', 'epg-time'])
-                        title_elem = item.find(['span', 'div'], class_=['title', 'program-title', 'epg-title'])
+        # 检查是否是央视官网EPG页面
+        if 'tv.cctv.com/epg/' in channel_info['url']:
+            logger.info(f"使用央视官网EPG页面抓取{channel_id}")
+            
+            # 央视官网EPG页面结构处理
+            # 1. 查找频道对应的节目单区域
+            # 频道ID映射 - 用于匹配页面中的频道标识
+            channel_id_map = {
+                'CCTV1': 'cctv1', 'CCTV2': 'cctv2', 'CCTV3': 'cctv3', 'CCTV4': 'cctv4',
+                'CCTV5': 'cctv5', 'CCTV5+': 'cctv5plus', 'CCTV6': 'cctv6', 'CCTV7': 'cctv7',
+                'CCTV8': 'cctv8', 'CCTV9': 'cctv9', 'CCTVjilu': 'cctv9', 'CCTV10': 'cctv10',
+                'CCTV11': 'cctv11', 'CCTV12': 'cctv12', 'CCTV13': 'cctv13', 'CCTV14': 'cctv14',
+                'CCTV15': 'cctv15', 'CCTV17': 'cctv17', 'CCTVplus': 'cctv5plus'
+            }
+            
+            # 查找特定频道的节目单
+            target_channel = channel_id_map.get(channel_id)
+            if target_channel:
+                # 尝试多种可能的选择器来查找频道节目单
+                # 1. 按ID查找
+                program_container = soup.find('div', id=f'program_{target_channel}')
+                if not program_container:
+                    # 2. 按class查找
+                    program_container = soup.find('div', class_=f'{target_channel}-program')
+                if not program_container:
+                    # 3. 查找包含频道名称的容器
+                    channel_name = channel_info['name'].split(' ')[0].lower()
+                    program_container = soup.find('div', class_=lambda x: x and channel_name in x)
+                
+                if program_container:
+                    # 提取节目项
+                    # 尝试查找节目列表项
+                    program_items = program_container.find_all(['div', 'li', 'tr'], class_=['program-item', 'epg-item', 'program-list-item', 'program-row'])
+                    
+                    if not program_items:
+                        # 尝试查找所有包含时间和标题的元素
+                        all_divs = program_container.find_all('div')
+                        time_elems = []
+                        title_elems = []
+                        
+                        # 先查找所有时间元素
+                        for div in all_divs:
+                            text = div.get_text().strip()
+                            if ':' in text and len(text) <= 5:
+                                time_elems.append(div)
+                        
+                        # 再查找所有标题元素
+                        for div in all_divs:
+                            # 排除时间元素和空元素
+                            if div not in time_elems and div.get_text().strip() and len(div.get_text().strip()) > 5:
+                                title_elems.append(div)
+                        
+                        # 配对时间和标题
+                        if len(time_elems) == len(title_elems):
+                            program_items = list(zip(time_elems, title_elems))
+                    
+                    # 处理节目项
+                    for item in program_items:
+                        time_elem = None
+                        title_elem = None
+                        
+                        # 如果是元组，直接解包
+                        if isinstance(item, tuple):
+                            time_elem, title_elem = item
+                        else:
+                            # 否则查找子元素
+                            time_elem = item.find(['span', 'div'], string=lambda text: text and ':' in text)
+                            if not time_elem:
+                                time_elem = item.find(['span', 'div'], class_=['time', 'program-time', 'epg-time'])
+                            
+                            title_elem = item.find(['span', 'div'], class_=['title', 'program-title', 'epg-title'])
+                            if not title_elem:
+                                # 尝试查找除时间外的其他文本元素
+                                for child in item.children:
+                                    if child != time_elem and child.get_text().strip():
+                                        title_elem = child
+                                        break
+                        
                         if time_elem and title_elem:
-                            program_items.append((time_elem, title_elem))
-                break
-        
-        # 如果没有找到，尝试直接搜索所有可能的节目项
-        if not program_items:
+                            time_str = time_elem.get_text().strip()
+                            title = title_elem.get_text().strip()
+                            
+                            # 清理时间字符串
+                            time_str = ''.join(c for c in time_str if c.isdigit() or c == ':')
+                            
+                            # 解析时间
+                            try:
+                                if ':' in time_str:
+                                    hour, minute = map(int, time_str.split(':'))
+                                    if hour >= 24:
+                                        hour = 0
+                                    program_time = datetime.combine(today, datetime.min.time().replace(hour=hour, minute=minute))
+                                    programs.append({
+                                        'start': program_time,
+                                        'title': title,
+                                        'description': f"{channel_info['name']}节目"
+                                    })
+                            except Exception as parse_error:
+                                logger.warning(f"解析{channel_id}节目时间失败: {parse_error}, 时间字符串: {time_str}")
+                                continue
+        else:
+            # 非央视官网页面，使用通用抓取逻辑
+            logger.info(f"使用通用逻辑抓取{channel_id}")
+            
+            # 适配CCTV网站实际结构 - CCTV节目单通常在特定的表格或列表中
+            # 尝试多种可能的选择器
+            program_containers = [
+                soup.find('div', class_='epg-container'),
+                soup.find('div', id='epg-content'),
+                soup.find('div', class_='program-list'),
+                soup.find('table', class_='epg-table')
+            ]
+            
             program_items = []
-            all_divs = soup.find_all('div')
-            for div in all_divs:
-                time_elem = div.find(['span', 'div'], string=lambda text: text and ':' in text)
-                if time_elem:
-                    title_elem = div.find_next(['span', 'div'], class_=['title', 'program'])
-                    if title_elem:
-                        program_items.append((time_elem, title_elem))
-        
-        for time_elem, title_elem in program_items:
-            time_str = time_elem.get_text().strip()
-            title = title_elem.get_text().strip()
+            for container in program_containers:
+                if container:
+                    # 表格结构
+                    if container.name == 'table':
+                        rows = container.find_all('tr')[1:]  # 跳过表头
+                        for row in rows:
+                            cells = row.find_all('td')
+                            if len(cells) >= 2:
+                                time_elem = cells[0]
+                                title_elem = cells[1]
+                                program_items.append((time_elem, title_elem))
+                    else:
+                        # 列表结构
+                        items = container.find_all(['div', 'li'], recursive=True)
+                        for item in items:
+                            time_elem = item.find(['span', 'div'], class_=['time', 'program-time', 'epg-time'])
+                            title_elem = item.find(['span', 'div'], class_=['title', 'program-title', 'epg-title'])
+                            if time_elem and title_elem:
+                                program_items.append((time_elem, title_elem))
+                    break
             
-            # 清理时间字符串，只保留HH:MM格式
-            time_str = ''.join(c for c in time_str if c.isdigit() or c == ':')
+            # 如果没有找到，尝试直接搜索所有可能的节目项
+            if not program_items:
+                program_items = []
+                all_divs = soup.find_all('div')
+                for div in all_divs:
+                    time_elem = div.find(['span', 'div'], string=lambda text: text and ':' in text)
+                    if time_elem:
+                        title_elem = div.find_next(['span', 'div'], class_=['title', 'program'])
+                        if title_elem:
+                            program_items.append((time_elem, title_elem))
             
-            # 解析时间格式
-            try:
-                if ':' in time_str:
-                    hour, minute = map(int, time_str.split(':'))
-                    # 处理24小时制和00:00的情况
-                    if hour >= 24:
-                        hour = 0
-                    program_time = datetime.combine(today, datetime.min.time().replace(hour=hour, minute=minute))
-                    programs.append({
-                        'start': program_time,
-                        'title': title,
-                        'description': f"{channel_info['name']}节目"
-                    })
-            except Exception as parse_error:
-                logger.warning(f"解析{channel_id}节目时间失败: {parse_error}, 时间字符串: {time_str}")
-                continue
+            for time_elem, title_elem in program_items:
+                time_str = time_elem.get_text().strip()
+                title = title_elem.get_text().strip()
+                
+                # 清理时间字符串，只保留HH:MM格式
+                time_str = ''.join(c for c in time_str if c.isdigit() or c == ':')
+                
+                # 解析时间格式
+                try:
+                    if ':' in time_str:
+                        hour, minute = map(int, time_str.split(':'))
+                        # 处理24小时制和00:00的情况
+                        if hour >= 24:
+                            hour = 0
+                        program_time = datetime.combine(today, datetime.min.time().replace(hour=hour, minute=minute))
+                        programs.append({
+                            'start': program_time,
+                            'title': title,
+                            'description': f"{channel_info['name']}节目"
+                        })
+                except Exception as parse_error:
+                    logger.warning(f"解析{channel_id}节目时间失败: {parse_error}, 时间字符串: {time_str}")
+                    continue
         
         return programs
     except requests.RequestException as e:
@@ -132,7 +247,18 @@ def fetch_cctv_programs(channel_id, channel_info):
 def fetch_satellite_programs(channel_id, channel_info):
     """抓取卫视频道节目单"""
     try:
-        response = make_request(channel_info['url'])
+        # 处理tvmao.com URL，自动替换星期参数
+        url = channel_info['url']
+        # 获取当天星期（1-7，周一到周日）
+        today_weekday = datetime.now().isoweekday()
+        # 替换URL中的星期参数（如w1, w2等）
+        if 'tvmao.com' in url:
+            import re
+            # 替换固定的星期参数为当天星期
+            url = re.sub(r'w\d+', f'w{today_weekday}', url)
+            logger.info(f"已将tvmao.com URL替换为当天星期: {url}")
+        
+        response = make_request(url)
         response.encoding = 'utf-8'
         soup = BeautifulSoup(response.text, 'lxml')
         
@@ -232,8 +358,8 @@ def fetch_satellite_programs(channel_id, channel_info):
                             'description': f"{channel_info['name']}节目"
                         })
                 except Exception as parse_error:
-                    logger.warning(f"解析{channel_id}节目时间失败: {parse_error}, 时间字符串: {time_str}")
-                    continue
+                logger.warning(f"解析{channel_id}节目时间失败: {parse_error}, 时间字符串: {time_str}")
+                continue
         
         return programs
     except requests.RequestException as e:
