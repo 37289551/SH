@@ -44,29 +44,19 @@ def fetch_tvmao_programs(soup, channel_name):
     try:
         logger.info(f"开始解析tvmao.com节目页面")
         
-        # 1. 查找tvmao.com最新的节目列表结构 - 基于实际页面分析
-        # 节目列表通常在一个ul或div中，每个节目是一个li元素
-        # 查找所有可能的节目项li元素
-        program_items = soup.find_all('li', class_=['bg_f7', 'bg_f3', ''])  # 匹配不同的背景色class
-        logger.info(f"找到 {len(program_items)} 个li节目项")
+        # 1. 首先解析页面中直接可用的节目列表
+        logger.info("解析页面中直接可用的节目列表")
         
-        # 遍历所有li元素，寻找包含节目信息的项
+        # 查找所有节目项li元素
+        program_items = soup.find_all('li', class_=['bg_f7', 'bg_f3', ''])
+        logger.info(f"找到 {len(program_items)} 个直接可用的li节目项")
+        
+        # 解析直接可用的节目
         for item in program_items:
             try:
-                # tvmao.com的节目项结构：
-                # <li class="bg_f7">
-                #   <div class="over_hide">
-                #     <span class="am">07:00</span>
-                #     <span class="p_show"><a title="节目名" href="...">节目名</a></span>
-                #   </div>
-                # </li>
-                
-                # 查找包含节目信息的div
                 over_hide_div = item.find('div', class_='over_hide')
                 if over_hide_div:
-                    # 查找时间元素 - 使用class="am"或class="pm"
                     time_span = over_hide_div.find('span', class_=['am', 'pm'])
-                    # 查找节目名称元素 - 在span.p_show内部的a标签中
                     p_show_span = over_hide_div.find('span', class_='p_show')
                     
                     if time_span and p_show_span:
@@ -81,57 +71,138 @@ def fetch_tvmao_programs(soup, channel_name):
             except Exception as e:
                 logger.error(f"解析节目项失败: {e}")
         
-        # 2. 如果没有找到，尝试另一种可能的结构
-        if not programs:
-            logger.info("尝试查找另一种tvmao.com节目结构")
-            
-            # 查找所有包含节目信息的元素组合
-            all_am_spans = soup.find_all('span', class_=['am', 'pm'])
-            logger.info(f"找到 {len(all_am_spans)} 个时间span元素")
-            
-            for time_span in all_am_spans:
-                try:
-                    # 查找相邻的p_show元素
-                    p_show_span = time_span.find_next('span', class_='p_show')
+        logger.info(f"直接解析完成，共找到 {len(programs)} 个节目")
+        
+    except Exception as e:
+        logger.error(f"解析tvmao.com节目失败: {e}", exc_info=True)
+    
+    return programs
+
+def fetch_tvmao_programs_with_dynamic(soup, channel_name, url):
+    """处理tvmao.com的节目抓取，包括动态加载内容"""
+    programs = []
+    
+    try:
+        logger.info(f"开始解析tvmao.com节目页面，包括动态加载内容")
+        
+        # 1. 首先解析页面中直接可用的节目列表
+        logger.info("解析页面中直接可用的节目列表")
+        
+        # 查找所有节目项li元素
+        program_items = soup.find_all('li', class_=['bg_f7', 'bg_f3', ''])
+        logger.info(f"找到 {len(program_items)} 个直接可用的li节目项")
+        
+        # 解析直接可用的节目
+        for item in program_items:
+            try:
+                over_hide_div = item.find('div', class_='over_hide')
+                if over_hide_div:
+                    time_span = over_hide_div.find('span', class_=['am', 'pm'])
+                    p_show_span = over_hide_div.find('span', class_='p_show')
                     
-                    if p_show_span:
+                    if time_span and p_show_span:
                         name_a = p_show_span.find('a')
                         if name_a:
                             time_str = time_span.get_text(strip=True)
                             title_str = name_a.get_text(strip=True)
                             
                             if time_str and title_str and len(time_str) >= 4:
-                                # 去重 - 防止重复添加
-                                if not any(p['time'] == time_str and p['title'] == title_str for p in programs):
-                                    programs.append({'time': time_str, 'title': title_str})
-                                    logger.debug(f"找到节目: {time_str} - {title_str}")
-                except Exception as e:
-                    logger.error(f"解析时间-标题对失败: {e}")
-        
-        # 3. 尝试查找旧版结构作为备选
-        if not programs:
-            logger.info("尝试查找tvmao.com旧版节目结构")
-            
-            # 查找div.program_list
-            program_list = soup.find('div', class_='program_list')
-            if program_list:
-                logger.info(f"找到div.program_list结构")
-                program_items = program_list.find_all('li')
-                
-                for item in program_items:
-                    try:
-                        time_elem = item.find('span', class_='time')
-                        title_elem = item.find('a', class_='name')
-                        
-                        if time_elem and title_elem:
-                            time_str = time_elem.get_text(strip=True)
-                            title_str = title_elem.get_text(strip=True)
-                            
-                            if time_str and title_str and len(time_str) >= 4:
                                 programs.append({'time': time_str, 'title': title_str})
                                 logger.debug(f"找到节目: {time_str} - {title_str}")
+            except Exception as e:
+                logger.error(f"解析节目项失败: {e}")
+        
+        logger.info(f"直接解析完成，共找到 {len(programs)} 个节目")
+        
+        # 2. 检查是否有"查看更多"按钮，如有则尝试加载更多节目
+        logger.info("检查是否需要加载更多节目")
+        more_epg_btn = soup.find('a', class_='more-epg2')
+        if more_epg_btn:
+            logger.info("发现\"查看更多\"按钮，尝试加载更多节目")
+            
+            # 从URL中提取参数
+            # URL格式：https://www.tvmao.com/program/[tc]-[cc]-w[w].html
+            # 例如：https://www.tvmao.com/program/CCTV-CCTV1-w5.html
+            import re
+            match = re.match(r'.*program/([^-]+)-([^-]+)-w(\d+)\.html', url)
+            if match:
+                tc = match.group(1)
+                cc = match.group(2)
+                w = match.group(3)
+                logger.info(f"从URL中提取到参数: tc={tc}, cc={cc}, w={w}")
+                
+                # 构造动态加载请求
+                dynamic_url = "https://www.tvmao.com/servlet/channelEpg"
+                params = {
+                    'tc': tc,
+                    'cc': cc,
+                    'w': w
+                }
+                
+                logger.info(f"发送动态加载请求到: {dynamic_url}")
+                logger.info(f"请求参数: {params}")
+                
+                # 发送POST请求获取动态内容
+                response = make_request(dynamic_url, headers={
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Referer': url
+                })
+                
+                if response:
+                    import json
+                    try:
+                        # 解析JSON响应
+                        data = json.loads(response.text)
+                        logger.info(f"动态加载请求成功，响应状态: {data[0]}")
+                        
+                        if data[0] > 0:
+                            # 成功获取动态内容
+                            dynamic_html = data[1]
+                            logger.info(f"获取到动态HTML内容，长度: {len(dynamic_html)} 字符")
+                            
+                            # 解析动态加载的HTML内容
+                            dynamic_soup = BeautifulSoup(dynamic_html, 'html.parser')
+                            
+                            # 查找动态加载的节目项
+                            dynamic_program_items = dynamic_soup.find_all('li', class_=['bg_f7', 'bg_f3', ''])
+                            logger.info(f"从动态内容中找到 {len(dynamic_program_items)} 个节目项")
+                            
+                            # 解析动态加载的节目
+                            for item in dynamic_program_items:
+                                try:
+                                    over_hide_div = item.find('div', class_='over_hide')
+                                    if over_hide_div:
+                                        time_span = over_hide_div.find('span', class_=['am', 'pm'])
+                                        p_show_span = over_hide_div.find('span', class_='p_show')
+                                        
+                                        if time_span and p_show_span:
+                                            name_a = p_show_span.find('a')
+                                            if name_a:
+                                                time_str = time_span.get_text(strip=True)
+                                                title_str = name_a.get_text(strip=True)
+                                                
+                                                if time_str and title_str and len(time_str) >= 4:
+                                                    # 去重检查
+                                                    if not any(p['time'] == time_str and p['title'] == title_str for p in programs):
+                                                        programs.append({'time': time_str, 'title': title_str})
+                                                        logger.debug(f"从动态内容找到节目: {time_str} - {title_str}")
+                                except Exception as e:
+                                    logger.error(f"解析动态节目项失败: {e}")
+                            
+                            logger.info(f"动态内容解析完成，新增 {len(programs) - len(program_items)} 个节目")
+                        else:
+                            logger.info(f"动态加载请求返回状态: {data[0]}, 没有更多内容")
+                    except json.JSONDecodeError as e:
+                        logger.error(f"解析动态内容JSON失败: {e}")
                     except Exception as e:
-                        logger.error(f"解析旧版节目项失败: {e}")
+                        logger.error(f"处理动态内容失败: {e}", exc_info=True)
+                else:
+                    logger.warning(f"动态加载请求失败")
+            else:
+                logger.warning(f"无法从URL中提取参数: {url}")
+        else:
+            logger.info("没有发现\"查看更多\"按钮，不需要加载更多节目")
         
         logger.info(f"tvmao.com节目解析完成，共找到 {len(programs)} 个节目")
         
@@ -184,8 +255,8 @@ def fetch_cctv_programs(channel_id, channel_info):
                 
                 # 检查是否为tvmao.com URL
                 if 'tvmao.com' in url:
-                    logger.info(f"使用tvmao.com专用解析器")
-                    programs = fetch_tvmao_programs(soup, channel_name)
+                    logger.info(f"使用tvmao.com专用解析器，支持动态加载")
+                    programs = fetch_tvmao_programs_with_dynamic(soup, channel_name, url)
                 else:
                     logger.info(f"使用通用解析器")
                     # 通用解析逻辑
@@ -271,8 +342,8 @@ def fetch_satellite_programs(channel_id, channel_info):
                 
                 # 检查是否为tvmao.com URL
                 if 'tvmao.com' in url:
-                    logger.info(f"使用tvmao.com专用解析器")
-                    programs = fetch_tvmao_programs(soup, channel_name)
+                    logger.info(f"使用tvmao.com专用解析器，支持动态加载")
+                    programs = fetch_tvmao_programs_with_dynamic(soup, channel_name, url)
                 else:
                     logger.info(f"使用通用解析器")
                     # 通用解析逻辑
@@ -372,13 +443,17 @@ def main():
     
     programs_dict = {}
     
-    # 只测试CCTV1频道，加快测试速度
-    test_channel_id = "CCTV1"
-    if test_channel_id in CHANNELS:
-        channel_info = CHANNELS[test_channel_id]
-        logger.info(f"正在测试抓取 {channel_info['name']}...")
-        programs = fetch_cctv_programs(test_channel_id, channel_info)
-        programs_dict[test_channel_id] = {
+    # 处理所有频道
+    for channel_id, channel_info in CHANNELS.items():
+        logger.info(f"正在抓取 {channel_info['name']}...")
+        
+        # 根据频道source字段选择抓取函数
+        if channel_info.get('source') == 'satellite':
+            programs = fetch_satellite_programs(channel_id, channel_info)
+        else:
+            programs = fetch_cctv_programs(channel_id, channel_info)
+        
+        programs_dict[channel_id] = {
             'name': channel_info['name'],
             'programs': programs
         }
