@@ -1,4 +1,3 @@
-
 # 频道配置
 CHANNELS = {
     # 央视频道
@@ -6,7 +5,7 @@ CHANNELS = {
         "name": "CCTV-1 综合",
         "url": "https://tv.cctv.com/epg/CCTV1",
         "backup_urls": [
-            "https://www.tvmao.com/program_cctv_CCTV1-w1.html",
+            "https://www.tvmao.com/program/CCTV-CCTV1-w1.html",
             "https://www.epg.net.cn/cctv1"
         ],
         "source": "cctv"
@@ -15,7 +14,7 @@ CHANNELS = {
         "name": "CCTV-2 财经",
         "url": "https://tv.cctv.com/epg/CCTV2",
         "backup_urls": [
-            "https://www.tvmao.com/program_cctv_CCTV2-w1.html",
+            "https://www.tvmao.com/program/CCTV-CCTV2-w1.html",
             "https://www.epg.net.cn/cctv2"
         ],
         "source": "cctv"
@@ -24,7 +23,7 @@ CHANNELS = {
         "name": "CCTV-3 综艺",
         "url": "https://tv.cctv.com/epg/CCTV3",
         "backup_urls": [
-            "https://www.tvmao.com/program_cctv_CCTV3-w1.html",
+            "https://www.tvmao.com/program/CCTV-CCTV3-w1.html",
             "https://www.epg.net.cn/cctv3"
         ],
         "source": "cctv"
@@ -33,7 +32,7 @@ CHANNELS = {
         "name": "CCTV-4 中文国际",
         "url": "https://tv.cctv.com/epg/CCTV4",
         "backup_urls": [
-            "https://www.tvmao.com/program_cctv_CCTV4-w1.html",
+            "https://www.tvmao.com/program/CCTV-CCTV4-w1.html",
             "https://www.epg.net.cn/cctv4"
         ],
         "source": "cctv"
@@ -42,7 +41,7 @@ CHANNELS = {
         "name": "CCTV-5 体育",
         "url": "https://tv.cctv.com/epg/CCTV5",
         "backup_urls": [
-            "https://www.tvmao.com/program_cctv_CCTV5-w1.html",
+            "https://www.tvmao.com/program/CCTV-CCTV5-w1.html",
             "https://www.epg.net.cn/cctv5"
         ],
         "source": "cctv"
@@ -51,7 +50,7 @@ CHANNELS = {
         "name": "CCTV-6 电影",
         "url": "https://tv.cctv.com/epg/CCTV6",
         "backup_urls": [
-            "https://www.tvmao.com/program_cctv_CCTV6-w1.html",
+            "https://www.tvmao.com/program/CCTV-CCTV6-w1.html",
             "https://www.epg.net.cn/cctv6"
         ],
         "source": "cctv"
@@ -60,7 +59,7 @@ CHANNELS = {
         "name": "CCTV-7 国防军事",
         "url": "https://tv.cctv.com/epg/CCTV7",
         "backup_urls": [
-            "https://www.tvmao.com/program_cctv_CCTV7-w1.html",
+            "https://www.tvmao.com/program/CCTV-CCTV7-w1.html",
             "https://www.epg.net.cn/cctv7"
         ],
         "source": "cctv"
@@ -69,7 +68,7 @@ CHANNELS = {
         "name": "CCTV-8 电视剧",
         "url": "https://tv.cctv.com/epg/CCTV8",
         "backup_urls": [
-            "https://www.tvmao.com/program_cctv_CCTV8-w1.html",
+            "https://www.tvmao.com/program/CCTV-CCTV8-w1.html",
             "https://www.epg.net.cn/cctv8"
         ],
         "source": "cctv"
@@ -78,7 +77,7 @@ CHANNELS = {
         "name": "CCTV-9 纪录",
         "url": "https://tv.cctv.com/epg/CCTV9",
         "backup_urls": [
-            "https://www.tvmao.com/program_cctv_CCTV9-w1.html",
+            "https://www.tvmao.com/program/CCTV-CCTV9-w1.html",
             "https://www.epg.net.cn/cctv9"
         ],
         "source": "cctv"
@@ -87,7 +86,7 @@ CHANNELS = {
         "name": "CCTV-10 科教",
         "url": "https://tv.cctv.com/epg/CCTV10",
         "backup_urls": [
-            "https://www.tvmao.com/program_cctv_CCTV10-w1.html",
+            "https://www.tvmao.com/program/CCTV-CCTV10-w1.html",
             "https://www.epg.net.cn/cctv10"
         ],
         "source": "cctv"
@@ -96,7 +95,7 @@ CHANNELS = {
         "name": "CCTV-11 戏曲",
         "url": "https://tv.cctv.com/epg/CCTV11",
         "backup_urls": [
-            "https://www.tvmao.com/program_cctv_CCTV11-w1.html",
+            "https://www.tvmao.com/program/CCTV-CCTV11-w1.html",
             "https://www.epg.net.cn/cctv11"
         ],
         "source": "cctv"
@@ -105,7 +104,7 @@ CHANNELS = {
         "name": "CCTV-12 社会与法",
         "url": "https://tv.cctv.com/epg/CCTV12",
         "backup_urls": [
-            "https://www.tvmao.com/program_cctv_CCTV12-w1.html",
+            "https://www.tvmao.com/program/CCTV-CCTV12-w1.html",
             "https://www.epg.net.cn/cctv12"
         ],
         "source": "cctv"
@@ -114,7 +113,7 @@ CHANNELS = {
         "name": "CCTV-13 新闻",
         "url": "https://tv.cctv.com/epg/CCTV13",
         "backup_urls": [
-            "https://www.tvmao.com/program_cctv_CCTV13-w1.html",
+            "https://www.tvmao.com/program/CCTV-CCTV13-w1.html",
             "https://www.epg.net.cn/cctv13"
         ],
         "source": "cctv"
@@ -123,7 +122,7 @@ CHANNELS = {
         "name": "CCTV-14 少儿",
         "url": "https://tv.cctv.com/epg/CCTV14",
         "backup_urls": [
-            "https://www.tvmao.com/program_cctv_CCTV14-w1.html",
+            "https://www.tvmao.com/program/CCTV-CCTV14-w1.html",
             "https://www.epg.net.cn/cctv14"
         ],
         "source": "cctv"
@@ -132,7 +131,7 @@ CHANNELS = {
         "name": "CCTV-15 音乐",
         "url": "https://tv.cctv.com/epg/CCTV15",
         "backup_urls": [
-            "https://www.tvmao.com/program_cctv_CCTV15-w1.html",
+            "https://www.tvmao.com/program/CCTV-CCTV15-w1.html",
             "https://www.epg.net.cn/cctv15"
         ],
         "source": "cctv"
@@ -141,7 +140,7 @@ CHANNELS = {
         "name": "CCTV-16 奥林匹克",
         "url": "https://tv.cctv.com/epg/CCTV16",
         "backup_urls": [
-            "https://www.tvmao.com/program_cctv_CCTV16-w1.html",
+            "https://www.tvmao.com/program/CCTV-CCTV16-w1.html",
             "https://www.epg.net.cn/cctv16"
         ],
         "source": "cctv"
@@ -150,7 +149,7 @@ CHANNELS = {
         "name": "CCTV-17 农业农村",
         "url": "https://tv.cctv.com/epg/CCTV17",
         "backup_urls": [
-            "https://www.tvmao.com/program_cctv_CCTV17-w1.html",
+            "https://www.tvmao.com/program/CCTV-CCTV17-w1.html",
             "https://www.epg.net.cn/cctv17"
         ],
         "source": "cctv"
@@ -159,7 +158,7 @@ CHANNELS = {
     # 卫视频道
     "BeijingTV": {
         "name": "北京卫视",
-        "url": "https://www.tvmao.com/program_satellite_BJTV1-w1.html",
+        "url": "https://www.tvmao.com/program_satellite/BJTV1-w1.html",
         "backup_urls": [
             "https://www.btime.com/tv/BJTV1",
             "https://www.epg.net.cn/beijing"
@@ -168,7 +167,7 @@ CHANNELS = {
     },
     "DragonTV": {
         "name": "东方卫视",
-        "url": "https://www.tvmao.com/program_satellite_SMG1-w1.html",
+        "url": "https://www.tvmao.com/program_satellite/SMG1-w1.html",
         "backup_urls": [
             "https://www.epg.net.cn/dragon"
         ],
@@ -176,7 +175,7 @@ CHANNELS = {
     },
     "ZhejiangTV": {
         "name": "浙江卫视",
-        "url": "https://www.tvmao.com/program_satellite_ZJTV1-w1.html",
+        "url": "https://www.tvmao.com/program_satellite/ZJTV1-w1.html",
         "backup_urls": [
             "https://www.epg.net.cn/zhejiang"
         ],
@@ -184,7 +183,7 @@ CHANNELS = {
     },
     "HunanTV": {
         "name": "湖南卫视",
-        "url": "https://www.tvmao.com/program_satellite_HNTV-w1.html",
+        "url": "https://www.tvmao.com/program_satellite/HNTV-w1.html",
         "backup_urls": [
             "https://www.epg.net.cn/hunan"
         ],
@@ -192,7 +191,7 @@ CHANNELS = {
     },
     "JiangsuTV": {
         "name": "江苏卫视",
-        "url": "https://www.tvmao.com/program_satellite_JSTV1-w1.html",
+        "url": "https://www.tvmao.com/program_satellite/JSTV1-w1.html",
         "backup_urls": [
             "https://www.epg.net.cn/jiangsu"
         ],
@@ -200,7 +199,7 @@ CHANNELS = {
     },
     "GuangdongTV": {
         "name": "广东卫视",
-        "url": "https://www.tvmao.com/program_satellite_GDTV-w1.html",
+        "url": "https://www.tvmao.com/program_satellite/GDTV-w1.html",
         "backup_urls": [
             "https://www.epg.net.cn/guangdong"
         ],
@@ -208,7 +207,7 @@ CHANNELS = {
     },
     "SichuanTV": {
         "name": "四川卫视",
-        "url": "https://www.tvmao.com/program_satellite_SCTV1-w1.html",
+        "url": "https://www.tvmao.com/program_satellite/SCTV1-w1.html",
         "backup_urls": [
             "https://www.epg.net.cn/sichuan"
         ],
@@ -216,7 +215,7 @@ CHANNELS = {
     },
     "HebeiTV": {
         "name": "河北卫视",
-        "url": "https://www.tvmao.com/program_satellite_HEBTV1-w1.html",
+        "url": "https://www.tvmao.com/program_satellite/HEBTV1-w1.html",
         "backup_urls": [
             "https://www.epg.net.cn/hebei"
         ],
@@ -224,7 +223,7 @@ CHANNELS = {
     },
     "ShanxiTV": {
         "name": "山西卫视",
-        "url": "https://www.tvmao.com/program_satellite_SXTV1-w1.html",
+        "url": "https://www.tvmao.com/program_satellite/SXTV1-w1.html",
         "backup_urls": [
             "https://www.epg.net.cn/shanxi"
         ],
@@ -232,7 +231,7 @@ CHANNELS = {
     },
     "InnerMongoliaTV": {
         "name": "内蒙古卫视",
-        "url": "https://www.tvmao.com/program_satellite_NMGLTV1-w1.html",
+        "url": "https://www.tvmao.com/program_satellite/NMGLTV1-w1.html",
         "backup_urls": [
             "https://www.epg.net.cn/neimenggu"
         ],
@@ -240,7 +239,7 @@ CHANNELS = {
     },
     "LiaoningTV": {
         "name": "辽宁卫视",
-        "url": "https://www.tvmao.com/program_satellite_LNTV1-w1.html",
+        "url": "https://www.tvmao.com/program_satellite/LNTV1-w1.html",
         "backup_urls": [
             "https://www.epg.net.cn/liaoning"
         ],
@@ -248,7 +247,7 @@ CHANNELS = {
     },
     "JilinTV": {
         "name": "吉林卫视",
-        "url": "https://www.tvmao.com/program_satellite_JLTV1-w1.html",
+        "url": "https://www.tvmao.com/program_satellite/JLTV1-w1.html",
         "backup_urls": [
             "https://www.epg.net.cn/jilin"
         ],
@@ -256,7 +255,7 @@ CHANNELS = {
     },
     "HeilongjiangTV": {
         "name": "黑龙江卫视",
-        "url": "https://www.tvmao.com/program_satellite_HLJTV1-w1.html",
+        "url": "https://www.tvmao.com/program_satellite/HLJTV1-w1.html",
         "backup_urls": [
             "https://www.epg.net.cn/heilongjiang"
         ],
@@ -264,7 +263,7 @@ CHANNELS = {
     },
     "ShanghaiTV": {
         "name": "上海卫视",
-        "url": "https://www.tvmao.com/program_satellite_SMG1-w1.html",
+        "url": "https://www.tvmao.com/program_satellite/SMG1-w1.html",
         "backup_urls": [
             "https://www.epg.net.cn/shanghai"
         ],
@@ -272,7 +271,7 @@ CHANNELS = {
     },
     "AnhuiTV": {
         "name": "安徽卫视",
-        "url": "https://www.tvmao.com/program_satellite_AHTV1-w1.html",
+        "url": "https://www.tvmao.com/program_satellite/AHTV1-w1.html",
         "backup_urls": [
             "https://www.epg.net.cn/anhui"
         ],
@@ -280,7 +279,7 @@ CHANNELS = {
     },
     "FujianTV": {
         "name": "东南卫视",
-        "url": "https://www.tvmao.com/program_satellite_FJTV2-w1.html",
+        "url": "https://www.tvmao.com/program_satellite/FJTV2-w1.html",
         "backup_urls": [
             "https://www.fjtv.net/epg",
             "https://www.epg.net.cn/fujian"
@@ -289,7 +288,7 @@ CHANNELS = {
     },
     "JiangxiTV": {
         "name": "江西卫视",
-        "url": "https://www.tvmao.com/program_satellite_JXTV1-w1.html",
+        "url": "https://www.tvmao.com/program_satellite/JXTV1-w1.html",
         "backup_urls": [
             "https://www.epg.net.cn/jiangxi"
         ],
@@ -297,7 +296,7 @@ CHANNELS = {
     },
     "ShandongTV": {
         "name": "山东卫视",
-        "url": "https://www.tvmao.com/program_satellite_SDTV1-w1.html",
+        "url": "https://www.tvmao.com/program_satellite/SDTV1-w1.html",
         "backup_urls": [
             "https://www.epg.net.cn/shandong"
         ],
@@ -305,7 +304,7 @@ CHANNELS = {
     },
     "HenanTV": {
         "name": "河南卫视",
-        "url": "https://www.tvmao.com/program_satellite_HNTV1-w1.html",
+        "url": "https://www.tvmao.com/program_satellite/HNTV1-w1.html",
         "backup_urls": [
             "https://www.epg.net.cn/henan"
         ],
@@ -313,7 +312,7 @@ CHANNELS = {
     },
     "HubeiTV": {
         "name": "湖北卫视",
-        "url": "https://www.tvmao.com/program_satellite_HBTV1-w1.html",
+        "url": "https://www.tvmao.com/program_satellite/HBTV1-w1.html",
         "backup_urls": [
             "https://www.epg.net.cn/hubei"
         ],
@@ -321,7 +320,7 @@ CHANNELS = {
     },
     "HainanTV": {
         "name": "海南卫视",
-        "url": "https://www.tvmao.com/program_satellite_HNANTV1-w1.html",
+        "url": "https://www.tvmao.com/program_satellite/HNANTV1-w1.html",
         "backup_urls": [
             "https://www.epg.net.cn/hainan"
         ],
@@ -329,7 +328,7 @@ CHANNELS = {
     },
     "ChongqingTV": {
         "name": "重庆卫视",
-        "url": "https://www.tvmao.com/program_satellite_CQTV1-w1.html",
+        "url": "https://www.tvmao.com/program_satellite/CQTV1-w1.html",
         "backup_urls": [
             "https://www.epg.net.cn/chongqing"
         ],
@@ -337,7 +336,7 @@ CHANNELS = {
     },
     "GuizhouTV": {
         "name": "贵州卫视",
-        "url": "https://www.tvmao.com/program_satellite_GZTV-w1.html",
+        "url": "https://www.tvmao.com/program_satellite/GZTV-w1.html",
         "backup_urls": [
             "https://www.epg.net.cn/guizhou"
         ],
@@ -345,7 +344,7 @@ CHANNELS = {
     },
     "YunnanTV": {
         "name": "云南卫视",
-        "url": "https://www.tvmao.com/program_satellite_YNTV1-w1.html",
+        "url": "https://www.tvmao.com/program_satellite/YNTV1-w1.html",
         "backup_urls": [
             "https://www.epg.net.cn/yunnan"
         ],
@@ -353,7 +352,7 @@ CHANNELS = {
     },
     "ShaanxiTV": {
         "name": "陕西卫视",
-        "url": "https://www.tvmao.com/program_satellite_SXTV-w1.html",
+        "url": "https://www.tvmao.com/program_satellite/SXTV-w1.html",
         "backup_urls": [
             "https://www.epg.net.cn/shaanxi"
         ],
@@ -361,7 +360,7 @@ CHANNELS = {
     },
     "GansuTV": {
         "name": "甘肃卫视",
-        "url": "https://www.tvmao.com/program_satellite_GSTV1-w1.html",
+        "url": "https://www.tvmao.com/program_satellite/GSTV1-w1.html",
         "backup_urls": [
             "https://www.epg.net.cn/gansu"
         ],
@@ -369,7 +368,7 @@ CHANNELS = {
     },
     "QinghaiTV": {
         "name": "青海卫视",
-        "url": "https://www.tvmao.com/program_satellite_QHTV1-w1.html",
+        "url": "https://www.tvmao.com/program_satellite/QHTV1-w1.html",
         "backup_urls": [
             "https://www.epg.net.cn/qinghai"
         ],
@@ -377,7 +376,7 @@ CHANNELS = {
     },
     "NingxiaTV": {
         "name": "宁夏卫视",
-        "url": "https://www.tvmao.com/program_satellite_NXTV1-w1.html",
+        "url": "https://www.tvmao.com/program_satellite/NXTV1-w1.html",
         "backup_urls": [
             "https://www.epg.net.cn/ningxia"
         ],
@@ -385,7 +384,7 @@ CHANNELS = {
     },
     "XinjiangTV": {
         "name": "新疆卫视",
-        "url": "https://www.tvmao.com/program_satellite_XJTV1-w1.html",
+        "url": "https://www.tvmao.com/program_satellite/XJTV1-w1.html",
         "backup_urls": [
             "https://www.epg.net.cn/xinjiang"
         ],
@@ -393,7 +392,7 @@ CHANNELS = {
     },
     "XizangTV": {
         "name": "西藏卫视",
-        "url": "https://www.tvmao.com/program_satellite_XZTV1-w1.html",
+        "url": "https://www.tvmao.com/program_satellite/XZTV1-w1.html",
         "backup_urls": [
             "https://www.epg.net.cn/xizang"
         ],
