@@ -15,8 +15,8 @@ logger = logging.getLogger(__name__)
 # 导入频道配置
 from channels import CHANNELS
 
-def make_request(url, headers=None, retry=2, delay=2):
-    """带重试机制的HTTP请求"""
+def make_request(url, headers=None, retry=2, delay=2, method='GET', data=None):
+    """带重试机制的HTTP请求，支持GET和POST"""
     if headers is None:
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
@@ -24,8 +24,11 @@ def make_request(url, headers=None, retry=2, delay=2):
     
     for attempt in range(retry):
         try:
-            logger.info(f"请求URL: {url} (尝试 {attempt+1}/{retry})")
-            response = requests.get(url, headers=headers, timeout=15)
+            logger.info(f"请求URL: {url} (尝试 {attempt+1}/{retry})，方法: {method}")
+            if method.upper() == 'POST':
+                response = requests.post(url, headers=headers, data=data, timeout=15)
+            else:
+                response = requests.get(url, headers=headers, params=data, timeout=15)
             response.raise_for_status()
             logger.info(f"成功获取URL: {url}，状态码: {response.status_code}")
             return response
@@ -143,16 +146,20 @@ def fetch_tvmao_programs_with_dynamic(soup, channel_name, url):
                 logger.info(f"请求参数: {params}")
                 
                 # 发送POST请求获取动态内容
-                response = make_request(dynamic_url, headers={
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'Referer': url
-                })
+                response = make_request(dynamic_url, 
+                                     headers={
+                                         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                                         'Content-Type': 'application/x-www-form-urlencoded',
+                                         'Referer': url
+                                     },
+                                     method='POST',
+                                     data=params)
                 
                 if response:
                     import json
                     try:
                         # 解析JSON响应
+                        logger.debug(f"动态加载响应内容: {response.text}")
                         data = json.loads(response.text)
                         logger.info(f"动态加载请求成功，响应状态: {data[0]}")
                         
@@ -195,10 +202,13 @@ def fetch_tvmao_programs_with_dynamic(soup, channel_name, url):
                             logger.info(f"动态加载请求返回状态: {data[0]}, 没有更多内容")
                     except json.JSONDecodeError as e:
                         logger.error(f"解析动态内容JSON失败: {e}")
+                        logger.warning(f"tvmao.com API可能已不可用，跳过动态加载")
                     except Exception as e:
                         logger.error(f"处理动态内容失败: {e}", exc_info=True)
+                        logger.warning(f"tvmao.com API可能已不可用，跳过动态加载")
                 else:
                     logger.warning(f"动态加载请求失败")
+                    logger.warning(f"tvmao.com API可能已不可用，跳过动态加载")
             else:
                 logger.warning(f"无法从URL中提取参数: {url}")
         else:
