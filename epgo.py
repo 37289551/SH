@@ -358,8 +358,8 @@ def fetch_satellite_programs(channel_id, channel_info):
                             'description': f"{channel_info['name']}节目"
                         })
                 except Exception as parse_error:
-                logger.warning(f"解析{channel_id}节目时间失败: {parse_error}, 时间字符串: {time_str}")
-                continue
+                        logger.warning(f"解析{channel_id}节目时间失败: {parse_error}, 时间字符串: {time_str}")
+                        continue
         
         return programs
     except requests.RequestException as e:
@@ -455,4 +455,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
