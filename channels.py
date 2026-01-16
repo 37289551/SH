@@ -1,0 +1,58 @@
+
+# 频道配置文件
+CHANNELS = {
+    # 央视频道
+    "CCTV1": {"name": "CCTV-1 综合", "url": "https://tv.cctv.com/epg/cctv1/", "backup_urls": ["https://epg.cctv.com/cctv1/", "https://www.iptvabc.com/epg/cctv1"], "source": "cctv"},
+    "CCTV2": {"name": "CCTV-2 财经", "url": "https://tv.cctv.com/epg/cctv2/", "backup_urls": ["https://epg.cctv.com/cctv2/", "https://www.iptvabc.com/epg/cctv2"], "source": "cctv"},
+    "CCTV3": {"name": "CCTV-3 综艺", "url": "https://tv.cctv.com/epg/cctv3/", "backup_urls": ["https://epg.cctv.com/cctv3/", "https://www.iptvabc.com/epg/cctv3"], "source": "cctv"},
+    "CCTV4": {"name": "CCTV-4 中文国际", "url": "https://tv.cctv.com/epg/cctv4/", "backup_urls": ["https://epg.cctv.com/cctv4/", "https://www.iptvabc.com/epg/cctv4"], "source": "cctv"},
+    "CCTV5": {"name": "CCTV-5 体育", "url": "https://tv.cctv.com/epg/cctv5/", "backup_urls": ["https://epg.cctv.com/cctv5/", "https://www.iptvabc.com/epg/cctv5"], "source": "cctv"},
+    "CCTV6": {"name": "CCTV-6 电影", "url": "https://tv.cctv.com/epg/cctv6/", "backup_urls": ["https://epg.cctv.com/cctv6/", "https://www.iptvabc.com/epg/cctv6"], "source": "cctv"},
+    "CCTV7": {"name": "CCTV-7 国防军事", "url": "https://tv.cctv.com/epg/cctv7/", "backup_urls": ["https://epg.cctv.com/cctv7/", "https://www.iptvabc.com/epg/cctv7"], "source": "cctv"},
+    "CCTV8": {"name": "CCTV-8 电视剧", "url": "https://tv.cctv.com/epg/cctv8/", "backup_urls": ["https://epg.cctv.com/cctv8/", "https://www.iptvabc.com/epg/cctv8"], "source": "cctv"},
+    "CCTV9": {"name": "CCTV-9 纪录", "url": "https://tv.cctv.com/epg/cctv9/", "backup_urls": ["https://epg.cctv.com/cctv9/", "https://www.iptvabc.com/epg/cctv9"], "source": "cctv"},
+    "CCTV10": {"name": "CCTV-10 科教", "url": "https://tv.cctv.com/epg/cctv10/", "backup_urls": ["https://epg.cctv.com/cctv10/", "https://www.iptvabc.com/epg/cctv10"], "source": "cctv"},
+    "CCTV11": {"name": "CCTV-11 戏曲", "url": "https://tv.cctv.com/epg/cctv11/", "backup_urls": ["https://epg.cctv.com/cctv11/", "https://www.iptvabc.com/epg/cctv11"], "source": "cctv"},
+    "CCTV12": {"name": "CCTV-12 社会与法", "url": "https://tv.cctv.com/epg/cctv12/", "backup_urls": ["https://epg.cctv.com/cctv12/", "https://www.iptvabc.com/epg/cctv12"], "source": "cctv"},
+    "CCTV13": {"name": "CCTV-13 新闻", "url": "https://tv.cctv.com/epg/cctv13/", "backup_urls": ["https://epg.cctv.com/cctv13/", "https://www.iptvabc.com/epg/cctv13"], "source": "cctv"},
+    "CCTV14": {"name": "CCTV-14 少儿", "url": "https://tv.cctv.com/epg/cctv14/", "backup_urls": ["https://epg.cctv.com/cctv14/", "https://www.iptvabc.com/epg/cctv14"], "source": "cctv"},
+    "CCTV15": {"name": "CCTV-15 音乐", "url": "https://tv.cctv.com/epg/cctv15/", "backup_urls": ["https://epg.cctv.com/cctv15/", "https://www.iptvabc.com/epg/cctv15"], "source": "cctv"},
+    "CCTV17": {"name": "CCTV-17 农业农村", "url": "https://tv.cctv.com/epg/cctv17/", "backup_urls": ["https://epg.cctv.com/cctv17/", "https://www.iptvabc.com/epg/cctv17"], "source": "cctv"},
+    
+    # 主要卫视频道
+    "HunanTV": {"name": "湖南卫视", "url": "https://www.hunantv.com/epg", "backup_urls": ["https://epg.hunantv.com", "https://www.iptvabc.com/epg/hunantv"], "source": "satellite"},
+    "ZhejiangTV": {"name": "浙江卫视", "url": "https://www.zjtv.com/epg", "backup_urls": ["https://epg.zjtv.com", "https://www.iptvabc.com/epg/zhejiangtv"], "source": "satellite"},
+    "JiangsuTV": {"name": "江苏卫视", "url": "https://www.jstv.com/epg", "backup_urls": ["https://epg.jstv.com", "https://www.iptvabc.com/epg/jiangsutv"], "source": "satellite"},
+    "DragonTV": {"name": "东方卫视", "url": "https://www.dragontv.com/epg", "backup_urls": ["https://epg.dragontv.com", "https://www.iptvabc.com/epg/dragontv"], "source": "satellite"},
+    "BeijingTV": {"name": "北京卫视", "url": "https://www.btv.com/epg", "backup_urls": ["https://epg.btv.com", "https://www.iptvabc.com/epg/beijingtv"], "source": "satellite"},
+    "GuangdongTV": {"name": "广东卫视", "url": "https://www.gdtv.com/epg", "backup_urls": ["https://epg.gdtv.com", "https://www.iptvabc.com/epg/guangdongtv"], "source": "satellite"},
+    "ShenzhenTV": {"name": "深圳卫视", "url": "https://www.sztv.com/epg", "backup_urls": ["https://epg.sztv.com", "https://www.iptvabc.com/epg/shenzhentv"], "source": "satellite"},
+    "AnhuiTV": {"name": "安徽卫视", "url": "https://www.ahtv.com/epg", "backup_urls": ["https://epg.ahtv.com", "https://www.iptvabc.com/epg/anhuitv"], "source": "satellite"},
+    "ShandongTV": {"name": "山东卫视", "url": "https://www.sdws.tv/epg", "backup_urls": ["https://epg.sdws.tv", "https://www.iptvabc.com/epg/shandongtv"], "source": "satellite"},
+    "TianjinTV": {"name": "天津卫视", "url": "https://www.tjtv.com/epg", "backup_urls": ["https://epg.tjtv.com", "https://www.iptvabc.com/epg/tianjintv"], "source": "satellite"},
+    
+    # 各省卫视频道
+    "HebeiTV": {"name": "河北卫视", "url": "https://www.hebtv.com/epg", "backup_urls": ["https://epg.hebtv.com", "https://www.iptvabc.com/epg/hebeitv"], "source": "satellite"},
+    "ShanxiTV": {"name": "山西卫视", "url": "https://www.sxtvs.com/epg", "backup_urls": ["https://epg.sxtvs.com", "https://www.iptvabc.com/epg/shanxitv"], "source": "satellite"},
+    "InnerMongoliaTV": {"name": "内蒙古卫视", "url": "https://www.nmtv.cn/epg", "backup_urls": ["https://epg.nmtv.cn", "https://www.iptvabc.com/epg/innermongoliatv"], "source": "satellite"},
+    "LiaoningTV": {"name": "辽宁卫视", "url": "https://www.lntv.com.cn/epg", "backup_urls": ["https://epg.lntv.com.cn", "https://www.iptvabc.com/epg/liaoningtv"], "source": "satellite"},
+    "JilinTV": {"name": "吉林卫视", "url": "https://www.jlntv.cn/epg", "backup_urls": ["https://epg.jlntv.cn", "https://www.iptvabc.com/epg/jilintv"], "source": "satellite"},
+    "HeilongjiangTV": {"name": "黑龙江卫视", "url": "https://www.hljtv.com/epg", "backup_urls": ["https://epg.hljtv.com", "https://www.iptvabc.com/epg/heilongjiangtv"], "source": "satellite"},
+    "ShanghaiTV": {"name": "上海卫视", "url": "https://www.dragontv.com/epg", "backup_urls": ["https://epg.dragontv.com", "https://www.iptvabc.com/epg/shanghaitv"], "source": "satellite"},
+    "JiangxiTV": {"name": "江西卫视", "url": "https://www.jxtv.com.cn/epg", "backup_urls": ["https://epg.jxtv.com.cn", "https://www.iptvabc.com/epg/jiangxitv"], "source": "satellite"},
+    "HenanTV": {"name": "河南卫视", "url": "https://www.hntv.tv/epg", "backup_urls": ["https://epg.hntv.tv", "https://www.iptvabc.com/epg/henantv"], "source": "satellite"},
+    "HubeiTV": {"name": "湖北卫视", "url": "https://www.hbtv.com.cn/epg", "backup_urls": ["https://epg.hbtv.com.cn", "https://www.iptvabc.com/epg/hubeitv"], "source": "satellite"},
+    "HunanTV2": {"name": "湖南卫视", "url": "https://www.hunantv.com/epg", "backup_urls": ["https://epg.hunantv.com", "https://www.iptvabc.com/epg/hunantv"], "source": "satellite"},
+    "GuangxiTV": {"name": "广西卫视", "url": "https://www.gxtv.cn/epg", "backup_urls": ["https://epg.gxtv.cn", "https://www.iptvabc.com/epg/guangxitv"], "source": "satellite"},
+    "HainanTV": {"name": "海南卫视", "url": "https://www.hntv.cn/epg", "backup_urls": ["https://epg.hntv.cn", "https://www.iptvabc.com/epg/hainantv"], "source": "satellite"},
+    "ChongqingTV": {"name": "重庆卫视", "url": "https://www.cqtv.cn/epg", "backup_urls": ["https://epg.cqtv.cn", "https://www.iptvabc.com/epg/chongqingtv"], "source": "satellite"},
+    "SichuanTV": {"name": "四川卫视", "url": "https://www.sctv.com/epg", "backup_urls": ["https://epg.sctv.com", "https://www.iptvabc.com/epg/sichuantv"], "source": "satellite"},
+    "GuizhouTV": {"name": "贵州卫视", "url": "https://www.gzstv.com/epg", "backup_urls": ["https://epg.gzstv.com", "https://www.iptvabc.com/epg/guizhoutv"], "source": "satellite"},
+    "YunnanTV": {"name": "云南卫视", "url": "https://www.yntv.cn/epg", "backup_urls": ["https://epg.yntv.cn", "https://www.iptvabc.com/epg/yunnantv"], "source": "satellite"},
+    "TibetTV": {"name": "西藏卫视", "url": "https://www.xztv.cn/epg", "backup_urls": ["https://epg.xztv.cn", "https://www.iptvabc.com/epg/tibettv"], "source": "satellite"},
+    "ShaanxiTV": {"name": "陕西卫视", "url": "https://www.sxtv.com.cn/epg", "backup_urls": ["https://epg.sxtv.com.cn", "https://www.iptvabc.com/epg/shaanxitv"], "source": "satellite"},
+    "GansuTV": {"name": "甘肃卫视", "url": "https://www.gstv.com.cn/epg", "backup_urls": ["https://epg.gstv.com.cn", "https://www.iptvabc.com/epg/gansutv"], "source": "satellite"},
+    "QinghaiTV": {"name": "青海卫视", "url": "https://www.qhtv.com.cn/epg", "backup_urls": ["https://epg.qhtv.com.cn", "https://www.iptvabc.com/epg/qinghaitv"], "source": "satellite"},
+    "NingxiaTV": {"name": "宁夏卫视", "url": "https://www.nxtv.com.cn/epg", "backup_urls": ["https://epg.nxtv.com.cn", "https://www.iptvabc.com/epg/ningxiatv"], "source": "satellite"},
+    "XinjiangTV": {"name": "新疆卫视", "url": "https://www.xjtvs.com.cn/epg", "backup_urls": ["https://epg.xjtvs.com.cn", "https://www.iptvabc.com/epg/xinjiangtv"], "source": "satellite"}
+}
