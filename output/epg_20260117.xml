@@ -1,0 +1,888 @@
+<?xml version="1.0" ?>
+<tv generator-info-name="EPGO Generator" generator-info-url="https://github.com/yourusername/epgo">
+  <channel id="CCTV1">
+    <display-name>CCTV-1 综合</display-name>
+  </channel>
+  <programme channel="CCTV1" start="20260117005100" stop="20260117012100">
+    <title lang="zh">生活早参考</title>
+  </programme>
+  <programme channel="CCTV1" start="20260117020700" stop="20260117023700">
+    <title lang="zh">今日说法</title>
+  </programme>
+  <programme channel="CCTV1" start="20260117024600" stop="20260117031600">
+    <title lang="zh">山水间的家</title>
+  </programme>
+  <programme channel="CCTV1" start="20260117042200" stop="20260117045200">
+    <title lang="zh">今日说法</title>
+  </programme>
+  <programme channel="CCTV1" start="20260117052700" stop="20260117055700">
+    <title lang="zh">寻古中国</title>
+  </programme>
+  <programme channel="CCTV1" start="20260117083600" stop="20260117090600">
+    <title lang="zh">生活早参考</title>
+  </programme>
+  <programme channel="CCTV1" start="20260117101100" stop="20260117104100">
+    <title lang="zh">归队</title>
+  </programme>
+  <programme channel="CCTV1" start="20260117115000" stop="20260117122000">
+    <title lang="zh">秘境之眼</title>
+  </programme>
+  <channel id="CCTV2">
+    <display-name>CCTV-2 财经</display-name>
+  </channel>
+  <programme channel="CCTV2" start="20260117002600" stop="20260117005600">
+    <title lang="zh">乡村振兴中国行</title>
+  </programme>
+  <programme channel="CCTV2" start="20260117020200" stop="20260117023200">
+    <title lang="zh">职场健康课</title>
+  </programme>
+  <programme channel="CCTV2" start="20260117032900" stop="20260117035900">
+    <title lang="zh">雨林之子</title>
+  </programme>
+  <programme channel="CCTV2" start="20260117043400" stop="20260117050400">
+    <title lang="zh">回家吃饭</title>
+  </programme>
+  <programme channel="CCTV2" start="20260117053300" stop="20260117060300">
+    <title lang="zh">生财有道</title>
+  </programme>
+  <programme channel="CCTV2" start="20260117065800" stop="20260117072800">
+    <title lang="zh">早间天气预报</title>
+  </programme>
+  <programme channel="CCTV2" start="20260117090100" stop="20260117093100">
+    <title lang="zh">梧桐树下老房子</title>
+  </programme>
+  <programme channel="CCTV2" start="20260117103600" stop="20260117110600">
+    <title lang="zh">周末特供</title>
+  </programme>
+  <programme channel="CCTV2" start="20260117111300" stop="20260117114300">
+    <title lang="zh">日出之食</title>
+  </programme>
+  <channel id="CCTV3">
+    <display-name>CCTV-3 综艺</display-name>
+  </channel>
+  <programme channel="CCTV3" start="20260117001400" stop="20260117004400">
+    <title lang="zh">综艺喜乐汇</title>
+  </programme>
+  <programme channel="CCTV3" start="20260117014600" stop="20260117021600">
+    <title lang="zh">舞台姐妹</title>
+  </programme>
+  <programme channel="CCTV3" start="20260117052700" stop="20260117055700">
+    <title lang="zh">艺熠生辉</title>
+  </programme>
+  <programme channel="CCTV3" start="20260117071100" stop="20260117074100">
+    <title lang="zh">文化十分</title>
+  </programme>
+  <programme channel="CCTV3" start="20260117084700" stop="20260117091700">
+    <title lang="zh">中国唱将</title>
+  </programme>
+  <channel id="CCTV4">
+    <display-name>CCTV-4 中文国际</display-name>
+  </channel>
+  <programme channel="CCTV4" start="20260117003500" stop="20260117010500">
+    <title lang="zh">塞上风云记</title>
+  </programme>
+  <programme channel="CCTV4" start="20260117015200" stop="20260117022200">
+    <title lang="zh">记住乡愁</title>
+  </programme>
+  <programme channel="CCTV4" start="20260117020000" stop="20260117023000">
+    <title lang="zh">新闻联播</title>
+  </programme>
+  <programme channel="CCTV4" start="20260117030000" stop="20260117033000">
+    <title lang="zh">中国新闻</title>
+  </programme>
+  <programme channel="CCTV4" start="20260117040000" stop="20260117043000">
+    <title lang="zh">中国新闻</title>
+  </programme>
+  <programme channel="CCTV4" start="20260117045700" stop="20260117052700">
+    <title lang="zh">天气预报</title>
+  </programme>
+  <programme channel="CCTV4" start="20260117053000" stop="20260117060000">
+    <title lang="zh">鲁健访谈</title>
+  </programme>
+  <programme channel="CCTV4" start="20260117063000" stop="20260117070000">
+    <title lang="zh">今日亚洲</title>
+  </programme>
+  <programme channel="CCTV4" start="20260117073000" stop="20260117080000">
+    <title lang="zh">今日关注</title>
+  </programme>
+  <programme channel="CCTV4" start="20260117090000" stop="20260117093000">
+    <title lang="zh">今日亚洲</title>
+  </programme>
+  <programme channel="CCTV4" start="20260117102700" stop="20260117105700">
+    <title lang="zh">环球综艺秀</title>
+  </programme>
+  <channel id="CCTV5">
+    <display-name>CCTV-5 体育</display-name>
+  </channel>
+  <programme channel="CCTV5" start="20260117003500" stop="20260117010500">
+    <title lang="zh">英格兰足球超级联赛</title>
+  </programme>
+  <programme channel="CCTV5" start="20260117023600" stop="20260117030600">
+    <title lang="zh">中国男子篮球职业联赛</title>
+  </programme>
+  <programme channel="CCTV5" start="20260117053000" stop="20260117060000">
+    <title lang="zh">射箭世界杯</title>
+  </programme>
+  <programme channel="CCTV5" start="20260117063000" stop="20260117070000">
+    <title lang="zh">健身动起来</title>
+  </programme>
+  <programme channel="CCTV5" start="20260117080500" stop="20260117083500">
+    <title lang="zh">世界职业拳王争霸赛</title>
+  </programme>
+  <programme channel="CCTV5" start="20260117103000" stop="20260117110000">
+    <title lang="zh">美国职业篮球联赛</title>
+  </programme>
+  <programme channel="CCTV5" start="20260117114500" stop="20260117121500">
+    <title lang="zh">美国职业篮球联赛</title>
+  </programme>
+  <channel id="CCTV6">
+    <display-name>CCTV-6 电影</display-name>
+  </channel>
+  <programme channel="CCTV6" start="20260117003100" stop="20260117010100">
+    <title lang="zh">今日影评</title>
+  </programme>
+  <programme channel="CCTV6" start="20260117004600" stop="20260117011600">
+    <title lang="zh">小镇发明家</title>
+  </programme>
+  <programme channel="CCTV6" start="20260117064700" stop="20260117071700">
+    <title lang="zh">绝招</title>
+  </programme>
+  <programme channel="CCTV6" start="20260117083000" stop="20260117090000">
+    <title lang="zh">断刀客</title>
+  </programme>
+  <programme channel="CCTV6" start="20260117102000" stop="20260117105000">
+    <title lang="zh">冰川时代5:星际碰撞</title>
+  </programme>
+  <programme channel="CCTV6" start="20260117115400" stop="20260117122400">
+    <title lang="zh">音乐电影欣赏</title>
+  </programme>
+  <channel id="CCTV7">
+    <display-name>CCTV-7 国防军事</display-name>
+  </channel>
+  <programme channel="CCTV7" start="20260117000900" stop="20260117003900">
+    <title lang="zh">兵器面面观</title>
+  </programme>
+  <programme channel="CCTV7" start="20260117060300" stop="20260117063300">
+    <title lang="zh">军事纪实</title>
+  </programme>
+  <programme channel="CCTV7" start="20260117070400" stop="20260117073400">
+    <title lang="zh">国防故事</title>
+  </programme>
+  <programme channel="CCTV7" start="20260117075800" stop="20260117082800">
+    <title lang="zh">讲武堂</title>
+  </programme>
+  <programme channel="CCTV7" start="20260117093900" stop="20260117100900">
+    <title lang="zh">军事纪实</title>
+  </programme>
+  <programme channel="CCTV7" start="20260117102300" stop="20260117105300">
+    <title lang="zh">寂静的山林</title>
+  </programme>
+  <channel id="CCTV8">
+    <display-name>CCTV-8 电视剧</display-name>
+  </channel>
+  <programme channel="CCTV8" start="20260117004500" stop="20260117011500">
+    <title lang="zh">星推荐</title>
+  </programme>
+  <programme channel="CCTV8" start="20260117013500" stop="20260117020500">
+    <title lang="zh">扫毒风暴</title>
+  </programme>
+  <programme channel="CCTV8" start="20260117030700" stop="20260117033700">
+    <title lang="zh">扫毒风暴</title>
+  </programme>
+  <programme channel="CCTV8" start="20260117043900" stop="20260117050900">
+    <title lang="zh">插花</title>
+  </programme>
+  <programme channel="CCTV8" start="20260117045000" stop="20260117052000">
+    <title lang="zh">故乡的泥土</title>
+  </programme>
+  <programme channel="CCTV8" start="20260117062200" stop="20260117065200">
+    <title lang="zh">故乡的泥土</title>
+  </programme>
+  <programme channel="CCTV8" start="20260117075700" stop="20260117082700">
+    <title lang="zh">星推荐</title>
+  </programme>
+  <programme channel="CCTV8" start="20260117085600" stop="20260117092600">
+    <title lang="zh">风与潮</title>
+  </programme>
+  <programme channel="CCTV8" start="20260117095400" stop="20260117102400">
+    <title lang="zh">密查</title>
+  </programme>
+  <programme channel="CCTV8" start="20260117114300" stop="20260117121300">
+    <title lang="zh">密查</title>
+  </programme>
+  <channel id="CCTV9">
+    <display-name>CCTV-9 纪录</display-name>
+  </channel>
+  <programme channel="CCTV9" start="20260117002100" stop="20260117005100">
+    <title lang="zh">微9</title>
+  </programme>
+  <programme channel="CCTV9" start="20260117025300" stop="20260117032300">
+    <title lang="zh">大河之洲</title>
+  </programme>
+  <programme channel="CCTV9" start="20260117035400" stop="20260117042400">
+    <title lang="zh">考古者说</title>
+  </programme>
+  <programme channel="CCTV9" start="20260117043900" stop="20260117050900">
+    <title lang="zh">微9</title>
+  </programme>
+  <programme channel="CCTV9" start="20260117051300" stop="20260117054300">
+    <title lang="zh">野性的守望</title>
+  </programme>
+  <programme channel="CCTV9" start="20260117064100" stop="20260117071100">
+    <title lang="zh">微9</title>
+  </programme>
+  <programme channel="CCTV9" start="20260117074300" stop="20260117081300">
+    <title lang="zh">考古者说</title>
+  </programme>
+  <programme channel="CCTV9" start="20260117113100" stop="20260117120100">
+    <title lang="zh">猛禽</title>
+  </programme>
+  <channel id="CCTV10">
+    <display-name>CCTV-10 科教</display-name>
+  </channel>
+  <programme channel="CCTV10" start="20260117001500" stop="20260117004500">
+    <title lang="zh">透视新科技</title>
+  </programme>
+  <programme channel="CCTV10" start="20260117011500" stop="20260117014500">
+    <title lang="zh">健康之路</title>
+  </programme>
+  <programme channel="CCTV10" start="20260117022500" stop="20260117025500">
+    <title lang="zh">百家讲坛</title>
+  </programme>
+  <programme channel="CCTV10" start="20260117060000" stop="20260117063000">
+    <title lang="zh">读书</title>
+  </programme>
+  <programme channel="CCTV10" start="20260117062000" stop="20260117065000">
+    <title lang="zh">时尚科技秀</title>
+  </programme>
+  <programme channel="CCTV10" start="20260117071300" stop="20260117074300">
+    <title lang="zh">科幻地带</title>
+  </programme>
+  <programme channel="CCTV10" start="20260117080000" stop="20260117083000">
+    <title lang="zh">探索·发现-2026-16</title>
+  </programme>
+  <programme channel="CCTV10" start="20260117094500" stop="20260117101500">
+    <title lang="zh">地理·中国-2026-16</title>
+  </programme>
+  <programme channel="CCTV10" start="20260117112200" stop="20260117115200">
+    <title lang="zh">味道</title>
+  </programme>
+  <channel id="CCTV11">
+    <display-name>CCTV-11 戏曲</display-name>
+  </channel>
+  <programme channel="CCTV11" start="20260117002600" stop="20260117005600">
+    <title lang="zh">典藏</title>
+  </programme>
+  <programme channel="CCTV11" start="20260117060600" stop="20260117063600">
+    <title lang="zh">CCTV空中剧院</title>
+  </programme>
+  <programme channel="CCTV11" start="20260117082700" stop="20260117085700">
+    <title lang="zh">典藏</title>
+  </programme>
+  <programme channel="CCTV11" start="20260117114700" stop="20260117121700">
+    <title lang="zh">北上</title>
+  </programme>
+  <channel id="CCTV12">
+    <display-name>CCTV-12 社会与法</display-name>
+  </channel>
+  <programme channel="CCTV12" start="20260117003900" stop="20260117010900">
+    <title lang="zh">妈妈在等你</title>
+  </programme>
+  <programme channel="CCTV12" start="20260117060300" stop="20260117063300">
+    <title lang="zh">法律讲堂</title>
+  </programme>
+  <programme channel="CCTV12" start="20260117071800" stop="20260117074800">
+    <title lang="zh">天网</title>
+  </programme>
+  <programme channel="CCTV12" start="20260117083500" stop="20260117090500">
+    <title lang="zh">夕阳红</title>
+  </programme>
+  <programme channel="CCTV12" start="20260117100400" stop="20260117103400">
+    <title lang="zh">方圆剧阵</title>
+  </programme>
+  <programme channel="CCTV12" start="20260117113000" stop="20260117120000">
+    <title lang="zh">热线12</title>
+  </programme>
+  <channel id="CCTV13">
+    <display-name>CCTV-13 新闻</display-name>
+  </channel>
+  <programme channel="CCTV13" start="20260117000000" stop="20260117003000">
+    <title lang="zh">午夜新闻</title>
+  </programme>
+  <programme channel="CCTV13" start="20260117003000" stop="20260117010000">
+    <title lang="zh">高端访谈</title>
+  </programme>
+  <programme channel="CCTV13" start="20260117012100" stop="20260117015100">
+    <title lang="zh">焦点访谈</title>
+  </programme>
+  <programme channel="CCTV13" start="20260117020000" stop="20260117023000">
+    <title lang="zh">新闻直播间</title>
+  </programme>
+  <programme channel="CCTV13" start="20260117030000" stop="20260117033000">
+    <title lang="zh">新闻直播间</title>
+  </programme>
+  <programme channel="CCTV13" start="20260117040000" stop="20260117043000">
+    <title lang="zh">新闻直播间</title>
+  </programme>
+  <programme channel="CCTV13" start="20260117050000" stop="20260117053000">
+    <title lang="zh">新闻直播间</title>
+  </programme>
+  <programme channel="CCTV13" start="20260117053400" stop="20260117060400">
+    <title lang="zh">法治在线</title>
+  </programme>
+  <programme channel="CCTV13" start="20260117085700" stop="20260117092700">
+    <title lang="zh">天气预报</title>
+  </programme>
+  <programme channel="CCTV13" start="20260117100000" stop="20260117103000">
+    <title lang="zh">新闻直播间</title>
+  </programme>
+  <programme channel="CCTV13" start="20260117110000" stop="20260117113000">
+    <title lang="zh">新闻直播间</title>
+  </programme>
+  <channel id="CCTV14">
+    <display-name>CCTV-14 少儿</display-name>
+  </channel>
+  <channel id="CCTV15">
+    <display-name>CCTV-15 音乐</display-name>
+  </channel>
+  <programme channel="CCTV15" start="20260117001800" stop="20260117004800">
+    <title lang="zh">闭台</title>
+  </programme>
+  <programme channel="CCTV15" start="20260117074500" stop="20260117081500">
+    <title lang="zh">七巧板</title>
+  </programme>
+  <programme channel="CCTV15" start="20260117090500" stop="20260117093500">
+    <title lang="zh">熊出没小小世界</title>
+  </programme>
+  <channel id="CCTV16">
+    <display-name>CCTV-16 奥林匹克</display-name>
+  </channel>
+  <programme channel="CCTV16" start="20260117002700" stop="20260117005700">
+    <title lang="zh">精彩音乐汇</title>
+  </programme>
+  <programme channel="CCTV16" start="20260117022500" stop="20260117025500">
+    <title lang="zh">再见</title>
+  </programme>
+  <programme channel="CCTV16" start="20260117070200" stop="20260117073200">
+    <title lang="zh">一起音乐吧</title>
+  </programme>
+  <programme channel="CCTV16" start="20260117085100" stop="20260117092100">
+    <title lang="zh">民歌·中国-2026-1我的家乡我的歌1</title>
+  </programme>
+  <programme channel="CCTV16" start="20260117112000" stop="20260117115000">
+    <title lang="zh">2025开播吧！国潮-1</title>
+  </programme>
+  <channel id="CCTV17">
+    <display-name>CCTV-17 农业农村</display-name>
+  </channel>
+  <programme channel="CCTV17" start="20260117000000" stop="20260117003000">
+    <title lang="zh">剧场</title>
+  </programme>
+  <programme channel="CCTV17" start="20260117014500" stop="20260117021500">
+    <title lang="zh">中国通</title>
+  </programme>
+  <programme channel="CCTV17" start="20260117023000" stop="20260117030000">
+    <title lang="zh">这就是中国</title>
+  </programme>
+  <programme channel="CCTV17" start="20260117033000" stop="20260117040000">
+    <title lang="zh">寻味中国</title>
+  </programme>
+  <programme channel="CCTV17" start="20260117040000" stop="20260117043000">
+    <title lang="zh">中华艺苑</title>
+  </programme>
+  <programme channel="CCTV17" start="20260117060000" stop="20260117063000">
+    <title lang="zh">剧场</title>
+  </programme>
+  <programme channel="CCTV17" start="20260117074500" stop="20260117081500">
+    <title lang="zh">中国通</title>
+  </programme>
+  <programme channel="CCTV17" start="20260117083000" stop="20260117090000">
+    <title lang="zh">这就是中国</title>
+  </programme>
+  <programme channel="CCTV17" start="20260117093000" stop="20260117100000">
+    <title lang="zh">中华艺苑</title>
+  </programme>
+  <programme channel="CCTV17" start="20260117103000" stop="20260117110000">
+    <title lang="zh">动画片</title>
+  </programme>
+  <programme channel="CCTV17" start="20260117113000" stop="20260117120000">
+    <title lang="zh">剧场</title>
+  </programme>
+  <channel id="BeijingTV">
+    <display-name>北京卫视</display-name>
+  </channel>
+  <programme channel="BeijingTV" start="20260117080000" stop="20260117083000">
+    <title lang="zh">新闻联播</title>
+  </programme>
+  <channel id="DragonTV">
+    <display-name>东方卫视</display-name>
+  </channel>
+  <channel id="ZhejiangTV">
+    <display-name>浙江卫视</display-name>
+  </channel>
+  <programme channel="ZhejiangTV" start="20260117002700" stop="20260117005700">
+    <title lang="zh">奔跑吧</title>
+  </programme>
+  <programme channel="ZhejiangTV" start="20260117041400" stop="20260117044400">
+    <title lang="zh">天气预报</title>
+  </programme>
+  <programme channel="ZhejiangTV" start="20260117044100" stop="20260117051100">
+    <title lang="zh">风起江南</title>
+  </programme>
+  <programme channel="ZhejiangTV" start="20260117060500" stop="20260117063500">
+    <title lang="zh">风起江南</title>
+  </programme>
+  <programme channel="ZhejiangTV" start="20260117070000" stop="20260117073000">
+    <title lang="zh">浙江新闻联播</title>
+  </programme>
+  <programme channel="ZhejiangTV" start="20260117074300" stop="20260117081300">
+    <title lang="zh">赵琳的探险日记</title>
+  </programme>
+  <programme channel="ZhejiangTV" start="20260117081300" stop="20260117084300">
+    <title lang="zh">幸福像花儿一样</title>
+  </programme>
+  <programme channel="ZhejiangTV" start="20260117103300" stop="20260117110300">
+    <title lang="zh">幸福像花儿一样</title>
+  </programme>
+  <programme channel="ZhejiangTV" start="20260117115900" stop="20260117122900">
+    <title lang="zh">幸福像花儿一样</title>
+  </programme>
+  <channel id="HunanTV">
+    <display-name>湖南卫视</display-name>
+  </channel>
+  <channel id="JiangsuTV">
+    <display-name>江苏卫视</display-name>
+  </channel>
+  <programme channel="JiangsuTV" start="20260117002600" stop="20260117005600">
+    <title lang="zh">长相思</title>
+  </programme>
+  <programme channel="JiangsuTV" start="20260117024300" stop="20260117031300">
+    <title lang="zh">我在岛屿读书</title>
+  </programme>
+  <programme channel="JiangsuTV" start="20260117042500" stop="20260117045500">
+    <title lang="zh">百姓的味道</title>
+  </programme>
+  <programme channel="JiangsuTV" start="20260117061000" stop="20260117064000">
+    <title lang="zh">子夜外卖</title>
+  </programme>
+  <programme channel="JiangsuTV" start="20260117072100" stop="20260117075100">
+    <title lang="zh">黄金时间</title>
+  </programme>
+  <programme channel="JiangsuTV" start="20260117082900" stop="20260117085900">
+    <title lang="zh">我爱古诗词</title>
+  </programme>
+  <programme channel="JiangsuTV" start="20260117100100" stop="20260117103100">
+    <title lang="zh">叛逆者</title>
+  </programme>
+  <programme channel="JiangsuTV" start="20260117112100" stop="20260117115100">
+    <title lang="zh">叛逆者</title>
+  </programme>
+  <channel id="GuangdongTV">
+    <display-name>广东卫视</display-name>
+  </channel>
+  <channel id="SichuanTV">
+    <display-name>四川卫视</display-name>
+  </channel>
+  <programme channel="SichuanTV" start="20260117003800" stop="20260117010800">
+    <title lang="zh">冰雨火</title>
+  </programme>
+  <programme channel="SichuanTV" start="20260117015200" stop="20260117022200">
+    <title lang="zh">百年巨匠</title>
+  </programme>
+  <programme channel="SichuanTV" start="20260117030600" stop="20260117033600">
+    <title lang="zh">百年巨匠</title>
+  </programme>
+  <programme channel="SichuanTV" start="20260117053200" stop="20260117060200">
+    <title lang="zh">百年巨匠</title>
+  </programme>
+  <programme channel="SichuanTV" start="20260117063100" stop="20260117070100">
+    <title lang="zh">重返三星堆</title>
+  </programme>
+  <programme channel="SichuanTV" start="20260117073000" stop="20260117080000">
+    <title lang="zh">气象信息</title>
+  </programme>
+  <programme channel="SichuanTV" start="20260117080000" stop="20260117083000">
+    <title lang="zh">少年苏东坡传奇</title>
+  </programme>
+  <programme channel="SichuanTV" start="20260117092600" stop="20260117095600">
+    <title lang="zh">神枪</title>
+  </programme>
+  <programme channel="SichuanTV" start="20260117110700" stop="20260117113700">
+    <title lang="zh">神枪</title>
+  </programme>
+  <channel id="HebeiTV">
+    <display-name>河北卫视</display-name>
+  </channel>
+  <channel id="ShanxiTV">
+    <display-name>山西卫视</display-name>
+  </channel>
+  <programme channel="ShanxiTV" start="20260117004400" stop="20260117011400">
+    <title lang="zh">山河同在</title>
+  </programme>
+  <programme channel="ShanxiTV" start="20260117020300" stop="20260117023300">
+    <title lang="zh">霓虹灯下的哨兵</title>
+  </programme>
+  <programme channel="ShanxiTV" start="20260117060500" stop="20260117063500">
+    <title lang="zh">喜乐汇</title>
+  </programme>
+  <programme channel="ShanxiTV" start="20260117064600" stop="20260117071600">
+    <title lang="zh">发现山西</title>
+  </programme>
+  <programme channel="ShanxiTV" start="20260117072300" stop="20260117075300">
+    <title lang="zh">天气预报</title>
+  </programme>
+  <programme channel="ShanxiTV" start="20260117081200" stop="20260117084200">
+    <title lang="zh">走进大戏台</title>
+  </programme>
+  <programme channel="ShanxiTV" start="20260117084200" stop="20260117091200">
+    <title lang="zh">宠物旅店</title>
+  </programme>
+  <channel id="InnerMongoliaTV">
+    <display-name>内蒙古卫视</display-name>
+  </channel>
+  <channel id="LiaoningTV">
+    <display-name>辽宁卫视</display-name>
+  </channel>
+  <programme channel="LiaoningTV" start="20260117004200" stop="20260117011200">
+    <title lang="zh">虎刺红</title>
+  </programme>
+  <programme channel="LiaoningTV" start="20260117020700" stop="20260117023700">
+    <title lang="zh">虎刺红</title>
+  </programme>
+  <programme channel="LiaoningTV" start="20260117042200" stop="20260117045200">
+    <title lang="zh">战天狼</title>
+  </programme>
+  <programme channel="LiaoningTV" start="20260117054100" stop="20260117061100">
+    <title lang="zh">黑土地</title>
+  </programme>
+  <programme channel="LiaoningTV" start="20260117073100" stop="20260117080100">
+    <title lang="zh">欢乐集结号</title>
+  </programme>
+  <programme channel="LiaoningTV" start="20260117081600" stop="20260117084600">
+    <title lang="zh">心奇爆龙战车之超斗爆龙</title>
+  </programme>
+  <programme channel="LiaoningTV" start="20260117083700" stop="20260117090700">
+    <title lang="zh">父母爱情</title>
+  </programme>
+  <programme channel="LiaoningTV" start="20260117095700" stop="20260117102700">
+    <title lang="zh">父母爱情</title>
+  </programme>
+  <programme channel="LiaoningTV" start="20260117111200" stop="20260117114200">
+    <title lang="zh">父母爱情</title>
+  </programme>
+  <channel id="JilinTV">
+    <display-name>吉林卫视</display-name>
+  </channel>
+  <channel id="HeilongjiangTV">
+    <display-name>黑龙江卫视</display-name>
+  </channel>
+  <programme channel="HeilongjiangTV" start="20260117003600" stop="20260117010600">
+    <title lang="zh">百年巨匠</title>
+  </programme>
+  <programme channel="HeilongjiangTV" start="20260117014900" stop="20260117021900">
+    <title lang="zh">遇事找法</title>
+  </programme>
+  <programme channel="HeilongjiangTV" start="20260117031000" stop="20260117034000">
+    <title lang="zh">白狼</title>
+  </programme>
+  <programme channel="HeilongjiangTV" start="20260117055000" stop="20260117062000">
+    <title lang="zh">百年巨匠</title>
+  </programme>
+  <programme channel="HeilongjiangTV" start="20260117063000" stop="20260117070000">
+    <title lang="zh">共度晨光</title>
+  </programme>
+  <programme channel="HeilongjiangTV" start="20260117074600" stop="20260117081600">
+    <title lang="zh">终极对决</title>
+  </programme>
+  <programme channel="HeilongjiangTV" start="20260117092800" stop="20260117095800">
+    <title lang="zh">开课啦</title>
+  </programme>
+  <programme channel="HeilongjiangTV" start="20260117112000" stop="20260117115000">
+    <title lang="zh">终极对决</title>
+  </programme>
+  <channel id="ShanghaiTV">
+    <display-name>上海卫视</display-name>
+  </channel>
+  <channel id="AnhuiTV">
+    <display-name>安徽卫视</display-name>
+  </channel>
+  <programme channel="AnhuiTV" start="20260117010100" stop="20260117013100">
+    <title lang="zh">四喜</title>
+  </programme>
+  <programme channel="AnhuiTV" start="20260117024000" stop="20260117031000">
+    <title lang="zh">男生女生向前冲</title>
+  </programme>
+  <programme channel="AnhuiTV" start="20260117045300" stop="20260117052300">
+    <title lang="zh">每日新闻报</title>
+  </programme>
+  <programme channel="AnhuiTV" start="20260117063000" stop="20260117070000">
+    <title lang="zh">超级新闻场</title>
+  </programme>
+  <programme channel="AnhuiTV" start="20260117080000" stop="20260117083000">
+    <title lang="zh">看安徽</title>
+  </programme>
+  <programme channel="AnhuiTV" start="20260117083000" stop="20260117090000">
+    <title lang="zh">男生女生向前冲</title>
+  </programme>
+  <programme channel="AnhuiTV" start="20260117100800" stop="20260117103800">
+    <title lang="zh">四喜</title>
+  </programme>
+  <programme channel="AnhuiTV" start="20260117114500" stop="20260117121500">
+    <title lang="zh">男生女生向前冲</title>
+  </programme>
+  <channel id="FujianTV">
+    <display-name>东南卫视</display-name>
+  </channel>
+  <programme channel="FujianTV" start="20260117005700" stop="20260117012700">
+    <title lang="zh">重返南霞</title>
+  </programme>
+  <programme channel="FujianTV" start="20260117041100" stop="20260117044100">
+    <title lang="zh">风从海上来</title>
+  </programme>
+  <programme channel="FujianTV" start="20260117065500" stop="20260117072500">
+    <title lang="zh">早间天气预报</title>
+  </programme>
+  <programme channel="FujianTV" start="20260117084100" stop="20260117091100">
+    <title lang="zh">西游记</title>
+  </programme>
+  <programme channel="FujianTV" start="20260117101400" stop="20260117104400">
+    <title lang="zh">西游记</title>
+  </programme>
+  <channel id="JiangxiTV">
+    <display-name>江西卫视</display-name>
+  </channel>
+  <programme channel="JiangxiTV" start="20260117002400" stop="20260117005400">
+    <title lang="zh">胜算</title>
+  </programme>
+  <programme channel="JiangxiTV" start="20260117020000" stop="20260117023000">
+    <title lang="zh">锋刃</title>
+  </programme>
+  <programme channel="JiangxiTV" start="20260117031400" stop="20260117034400">
+    <title lang="zh">再造之恩</title>
+  </programme>
+  <programme channel="JiangxiTV" start="20260117045400" stop="20260117052400">
+    <title lang="zh">再造之恩</title>
+  </programme>
+  <programme channel="JiangxiTV" start="20260117064600" stop="20260117071600">
+    <title lang="zh">非遗美食</title>
+  </programme>
+  <programme channel="JiangxiTV" start="20260117072400" stop="20260117075400">
+    <title lang="zh">天气预报</title>
+  </programme>
+  <programme channel="JiangxiTV" start="20260117080400" stop="20260117083400">
+    <title lang="zh">美味人生</title>
+  </programme>
+  <programme channel="JiangxiTV" start="20260117092500" stop="20260117095500">
+    <title lang="zh">老酒馆</title>
+  </programme>
+  <programme channel="JiangxiTV" start="20260117110900" stop="20260117113900">
+    <title lang="zh">老酒馆</title>
+  </programme>
+  <channel id="ShandongTV">
+    <display-name>山东卫视</display-name>
+  </channel>
+  <programme channel="ShandongTV" start="20260117042100" stop="20260117045100">
+    <title lang="zh">地道战</title>
+  </programme>
+  <programme channel="ShandongTV" start="20260117053500" stop="20260117060500">
+    <title lang="zh">地道战</title>
+  </programme>
+  <programme channel="ShandongTV" start="20260117065600" stop="20260117072600">
+    <title lang="zh">早安山东</title>
+  </programme>
+  <programme channel="ShandongTV" start="20260117070100" stop="20260117073100">
+    <title lang="zh">早安山东</title>
+  </programme>
+  <programme channel="ShandongTV" start="20260117080800" stop="20260117083800">
+    <title lang="zh">霸王龙雷奇</title>
+  </programme>
+  <programme channel="ShandongTV" start="20260117103000" stop="20260117110000">
+    <title lang="zh">彭德怀元帅</title>
+  </programme>
+  <channel id="HenanTV">
+    <display-name>河南卫视</display-name>
+  </channel>
+  <programme channel="HenanTV" start="20260117001200" stop="20260117004200">
+    <title lang="zh">武林风</title>
+  </programme>
+  <programme channel="HenanTV" start="20260117014800" stop="20260117021800">
+    <title lang="zh">梨园春</title>
+  </programme>
+  <programme channel="HenanTV" start="20260117032600" stop="20260117035600">
+    <title lang="zh">西北岁月</title>
+  </programme>
+  <programme channel="HenanTV" start="20260117050200" stop="20260117053200">
+    <title lang="zh">西北岁月</title>
+  </programme>
+  <programme channel="HenanTV" start="20260117072800" stop="20260117075800">
+    <title lang="zh">大象财经</title>
+  </programme>
+  <programme channel="HenanTV" start="20260117092000" stop="20260117095000">
+    <title lang="zh">赵琳的探险日记</title>
+  </programme>
+  <programme channel="HenanTV" start="20260117093800" stop="20260117100800">
+    <title lang="zh">赵琳的探险日记</title>
+  </programme>
+  <programme channel="HenanTV" start="20260117105500" stop="20260117112500">
+    <title lang="zh">宰相刘罗锅</title>
+  </programme>
+  <channel id="HubeiTV">
+    <display-name>湖北卫视</display-name>
+  </channel>
+  <channel id="HainanTV">
+    <display-name>海南卫视</display-name>
+  </channel>
+  <channel id="ChongqingTV">
+    <display-name>重庆卫视</display-name>
+  </channel>
+  <channel id="GuizhouTV">
+    <display-name>贵州卫视</display-name>
+  </channel>
+  <channel id="YunnanTV">
+    <display-name>云南卫视</display-name>
+  </channel>
+  <programme channel="YunnanTV" start="20260117001800" stop="20260117004800">
+    <title lang="zh">瞄准</title>
+  </programme>
+  <programme channel="YunnanTV" start="20260117015700" stop="20260117022700">
+    <title lang="zh">瞄准</title>
+  </programme>
+  <programme channel="YunnanTV" start="20260117044600" stop="20260117051600">
+    <title lang="zh">瞄准</title>
+  </programme>
+  <programme channel="YunnanTV" start="20260117062500" stop="20260117065500">
+    <title lang="zh">记住乡愁</title>
+  </programme>
+  <programme channel="YunnanTV" start="20260117072700" stop="20260117075700">
+    <title lang="zh">南腔北调</title>
+  </programme>
+  <programme channel="YunnanTV" start="20260117083900" stop="20260117090900">
+    <title lang="zh">雪豹</title>
+  </programme>
+  <programme channel="YunnanTV" start="20260117100800" stop="20260117103800">
+    <title lang="zh">雪豹</title>
+  </programme>
+  <channel id="ShaanxiTV">
+    <display-name>陕西卫视</display-name>
+  </channel>
+  <channel id="GansuTV">
+    <display-name>甘肃卫视</display-name>
+  </channel>
+  <programme channel="GansuTV" start="20260117000000" stop="20260117003000">
+    <title lang="zh">生活服务</title>
+  </programme>
+  <programme channel="GansuTV" start="20260117005300" stop="20260117012300">
+    <title lang="zh">纪录30分</title>
+  </programme>
+  <programme channel="GansuTV" start="20260117020000" stop="20260117023000">
+    <title lang="zh">绝密543</title>
+  </programme>
+  <programme channel="GansuTV" start="20260117030300" stop="20260117033300">
+    <title lang="zh">劳模纪录工程</title>
+  </programme>
+  <programme channel="GansuTV" start="20260117034600" stop="20260117041600">
+    <title lang="zh">绝密543</title>
+  </programme>
+  <programme channel="GansuTV" start="20260117044200" stop="20260117051200">
+    <title lang="zh">纪录30分</title>
+  </programme>
+  <programme channel="GansuTV" start="20260117055100" stop="20260117062100">
+    <title lang="zh">飞虎神鹰</title>
+  </programme>
+  <programme channel="GansuTV" start="20260117070000" stop="20260117073000">
+    <title lang="zh">中华人民共和国国歌</title>
+  </programme>
+  <programme channel="GansuTV" start="20260117072500" stop="20260117075500">
+    <title lang="zh">法治伴你行</title>
+  </programme>
+  <programme channel="GansuTV" start="20260117081800" stop="20260117084800">
+    <title lang="zh">生活服务</title>
+  </programme>
+  <programme channel="GansuTV" start="20260117091600" stop="20260117094600">
+    <title lang="zh">生活服务</title>
+  </programme>
+  <programme channel="GansuTV" start="20260117101100" stop="20260117104100">
+    <title lang="zh">生活服务</title>
+  </programme>
+  <programme channel="GansuTV" start="20260117110400" stop="20260117113400">
+    <title lang="zh">生活服务</title>
+  </programme>
+  <programme channel="GansuTV" start="20260117115200" stop="20260117122200">
+    <title lang="zh">生活服务</title>
+  </programme>
+  <channel id="QinghaiTV">
+    <display-name>青海卫视</display-name>
+  </channel>
+  <programme channel="QinghaiTV" start="20260117000000" stop="20260117003000">
+    <title lang="zh">龙斗之UFC</title>
+  </programme>
+  <programme channel="QinghaiTV" start="20260117070000" stop="20260117073000">
+    <title lang="zh">中华人民共和国国歌</title>
+  </programme>
+  <programme channel="QinghaiTV" start="20260117072600" stop="20260117075600">
+    <title lang="zh">今日青海</title>
+  </programme>
+  <programme channel="QinghaiTV" start="20260117081300" stop="20260117084300">
+    <title lang="zh">动画片</title>
+  </programme>
+  <programme channel="QinghaiTV" start="20260117093600" stop="20260117100600">
+    <title lang="zh">薛丁山</title>
+  </programme>
+  <programme channel="QinghaiTV" start="20260117112200" stop="20260117115200">
+    <title lang="zh">薛丁山</title>
+  </programme>
+  <channel id="NingxiaTV">
+    <display-name>宁夏卫视</display-name>
+  </channel>
+  <programme channel="NingxiaTV" start="20260117004500" stop="20260117011500">
+    <title lang="zh">哈喜喜扯磨</title>
+  </programme>
+  <programme channel="NingxiaTV" start="20260117011500" stop="20260117014500">
+    <title lang="zh">每日文娱播报</title>
+  </programme>
+  <programme channel="NingxiaTV" start="20260117070000" stop="20260117073000">
+    <title lang="zh">宁夏新闻联播</title>
+  </programme>
+  <programme channel="NingxiaTV" start="20260117073000" stop="20260117080000">
+    <title lang="zh">直播60分</title>
+  </programme>
+  <programme channel="NingxiaTV" start="20260117113500" stop="20260117120500">
+    <title lang="zh">哈喜喜扯磨</title>
+  </programme>
+  <channel id="XinjiangTV">
+    <display-name>新疆卫视</display-name>
+  </channel>
+  <programme channel="XinjiangTV" start="20260117001400" stop="20260117004400">
+    <title lang="zh">健康公开课</title>
+  </programme>
+  <programme channel="XinjiangTV" start="20260117011200" stop="20260117014200">
+    <title lang="zh">奔腾岁月</title>
+  </programme>
+  <programme channel="XinjiangTV" start="20260117024100" stop="20260117031100">
+    <title lang="zh">奔腾岁月</title>
+  </programme>
+  <programme channel="XinjiangTV" start="20260117035800" stop="20260117042800">
+    <title lang="zh">真实纪录</title>
+  </programme>
+  <programme channel="XinjiangTV" start="20260117045500" stop="20260117052500">
+    <title lang="zh">暗夜与黎明</title>
+  </programme>
+  <programme channel="XinjiangTV" start="20260117064900" stop="20260117071900">
+    <title lang="zh">暗夜与黎明</title>
+  </programme>
+  <programme channel="XinjiangTV" start="20260117083200" stop="20260117090200">
+    <title lang="zh">今日聚焦</title>
+  </programme>
+  <programme channel="XinjiangTV" start="20260117092400" stop="20260117095400">
+    <title lang="zh">大决战</title>
+  </programme>
+  <programme channel="XinjiangTV" start="20260117113600" stop="20260117120600">
+    <title lang="zh">大决战</title>
+  </programme>
+  <channel id="XizangTV">
+    <display-name>西藏卫视</display-name>
+  </channel>
+  <programme channel="XizangTV" start="20260117080000" stop="20260117083000">
+    <title lang="zh">家庭剧场</title>
+  </programme>
+</tv>
