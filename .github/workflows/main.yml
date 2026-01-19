@@ -1,4 +1,4 @@
-name: EPGO - 自动生成节目单
+name: EPGO
 
 on:
   # 每天定时运行（UTC时间0点，即北京时间8点）
