@@ -176,13 +176,10 @@ def fetch_channel_programs(channel, session):
     
     logger.info(f"正在提取 {channel_name} (标准化: {standard_channel_name}) 的节目单: {channel_url}")
     
-    # 直接返回空列表，因为央视网的EPG页面结构已更改，无法直接通过URL获取节目单
-    # 我们将在后续实现中更新为新的API或页面解析方式
-    logger.info(f"  {standard_channel_name}: 央视网EPG页面结构已更改，暂不支持直接抓取节目单")
-    
-    # 跳过请求，直接返回空列表
-    # 添加适当延迟，避免请求过快
-    time.sleep(0.5)
+    # 直接返回空列表，因为央视网的EPG页面结构已完全更改
+    # 当前央视网使用动态加载技术，传统HTML抓取方式已无法获取节目单
+    logger.warning(f"  {standard_channel_name}: 央视网EPG页面已重构为动态加载模式，暂不支持抓取")
+    logger.warning(f"  建议使用TVMao或TVSou等其他数据源获取CCTV节目单")
     
     return programs
 
@@ -190,22 +187,10 @@ def fetch_cctv_programs():
     """从CCTV官网提取所有央视频道节目单"""
     programs_dict = {}
     
-    # 获取频道列表
-    channels, session = fetch_cctv_channels()
-    if not channels:
-        logger.error("未能获取到CCTV频道列表")
-        return programs_dict
+    # 直接返回空结果，因为央视网已经无法抓取
+    logger.error("央视网EPG页面已完全重构，当前使用动态加载技术，传统HTML抓取方式已无法获取节目单")
+    logger.error("建议使用TVMao或TVSou等其他数据源获取CCTV节目单")
     
-    # 提取每个频道的节目单
-    for channel in channels:
-        channel_name = channel["name"]
-        programs = fetch_channel_programs(channel, session)
-        if programs:
-            # 标准化频道名称
-            standard_channel_name = normalize_channel_name(channel_name)
-            programs_dict[standard_channel_name] = programs
-    
-    logger.info(f"CCTV节目单提取完成，共获取到 {len(programs_dict)} 个频道的节目单")
     return programs_dict
 
 def generate_xmltv(programs_dict):

@@ -1,4 +1,5 @@
 import requests
+import time
 from bs4 import BeautifulSoup
 import logging
 from datetime import datetime, timedelta
@@ -55,11 +56,26 @@ def fetch_tvsou_channel_programs(url, channel_type):
         
         # 从页面中提取所有频道的节目单
         # 首先查找包含频道名称的元素，通常是链接或标题
-        channel_links = soup.find_all('a', href=lambda href: href and '/epg/' in href and ('yangshi' in href or 'weishi' in href))
+        channel_links = soup.find_all('a', href=lambda href: href and '/epg/' in href and ('yangshi' in href or 'weishi' in href) and '_w' not in href)
         logger.info(f"找到 {len(channel_links)} 个频道链接")
         
-        # 提取唯一的频道链接
-        unique_channels = {link['href']: link.text.strip() for link in channel_links if link.text.strip()}
+        # 提取唯一的频道链接，过滤掉分类标签和日期标签
+        unique_channels = {}
+        for link in channel_links:
+            channel_name = link.text.strip()
+            channel_href = link['href']
+            
+            # 过滤掉分类标签
+            if channel_name in ['央视', '卫视']:
+                continue
+            
+            # 过滤掉日期标签
+            if re.match(r'^(周一|周二|周三|周四|周五|周六|周日)', channel_name):
+                continue
+            
+            if channel_name and channel_href not in unique_channels:
+                unique_channels[channel_href] = channel_name
+        
         logger.info(f"去重后得到 {len(unique_channels)} 个频道")
         
         for channel_href, channel_name in unique_channels.items():
@@ -77,8 +93,7 @@ def fetch_tvsou_channel_programs(url, channel_type):
             channel_soup = BeautifulSoup(channel_response.text, 'html.parser')
             programs = []
             
-            # 查找节目列表，通常在特定的div或table中
-            # 1. 尝试查找节目表格
+            # 查找节目列表，tvsou的节目单通常在表格中
             program_tables = channel_soup.find_all('table')
             for table in program_tables:
                 rows = table.find_all('tr')
@@ -88,33 +103,6 @@ def fetch_tvsou_channel_programs(url, channel_type):
                         time_str = cells[0].text.strip()
                         title = cells[1].text.strip()
                         if time_str and title and ':' in time_str:
-                            programs.append({'time': time_str, 'title': title})
-            
-            # 2. 如果表格没找到，尝试查找包含节目信息的div
-            if not programs:
-                program_divs = channel_soup.find_all('div', class_=lambda cls: cls and ('program' in cls or 'epg' in cls))
-                for div in program_divs:
-                    text = div.text.strip()
-                    lines = text.split('\n')
-                    for line in lines:
-                        line = line.strip()
-                        if line and ':' in line[:5]:
-                            time_str = line[:5]
-                            title = line[5:].strip()
-                            if time_str and title:
-                                programs.append({'time': time_str, 'title': title})
-            
-            # 3. 尝试从文本中直接提取
-            if not programs:
-                content = channel_soup.text
-                lines = content.split('\n')
-                current_time = ""
-                for line in lines:
-                    line = line.strip()
-                    if line and len(line) >= 5 and ':' in line[:5]:
-                        time_str = line[:5]
-                        title = line[5:].strip()
-                        if time_str and title:
                             programs.append({'time': time_str, 'title': title})
             
             # 去重节目
