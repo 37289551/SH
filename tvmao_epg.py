@@ -57,7 +57,7 @@ def generate_time_slots():
     """生成时间槽列表，从0到22，间隔2"""
     return list(range(0, 24, 2))
 
-def generate_urls(base_url, channel_type, weekday=None):
+def generate_urls(channel_type, weekday=None):
     """生成所有需要抓取的URL列表"""
     urls = []
     
@@ -166,7 +166,7 @@ def fetch_tvmao_programs(channel_type, weekday=None):
     programs_dict = {}
     
     # 生成所有需要抓取的URL
-    urls = generate_urls(None, channel_type, weekday)
+    urls = generate_urls(channel_type, weekday)
     if not urls:
         return programs_dict
     

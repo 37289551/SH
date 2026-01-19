@@ -4,6 +4,7 @@ import logging
 from datetime import datetime, timedelta
 import os
 import time
+import re
 
 # 导入频道名称映射表
 from channel_mapping import normalize_channel_name
@@ -126,21 +127,16 @@ def fetch_cctv_channels():
         # 如果从网页获取的频道数量不足，使用已知频道列表作为补充
         if len(channels) < 5:
             logger.info("从网页获取的频道数量不足，使用已知频道列表作为补充")
-            # 为已知频道生成标准的EPG URL
+            # 当前央视网节目单页面结构已更改，不再支持原有的index_X.shtml格式
+            # 所有频道的节目单都可以从主页面获取，或者使用新的URL格式
+            main_epg_url = "https://tv.cctv.com/epg/index.shtml"
             for channel_name in known_cctv_channels:
                 # 检查频道是否已存在
                 channel_exists = any(channel["name"] in channel_name or channel_name in channel["name"] for channel in channels)
                 if not channel_exists:
-                    # 生成频道的EPG URL
-                    # 提取频道号，如 "CCTV-1" 或 "CCTV-5+"
-                    if "CCTV-" in channel_name:
-                        channel_code = channel_name.split()[0]
-                        # 替换 "CCTV-" 为 "epg/index_" 生成URL
-                        url_code = channel_code.replace("CCTV-", "epg/index_")
-                        # 处理CCTV-5+的特殊情况
-                        url_code = url_code.replace("5+", "5p")
-                        channel_url = f"https://tv.cctv.com/{url_code}.shtml"
-                        channels.append({"name": channel_name, "url": channel_url})
+                    # 使用主EPG页面作为所有频道的节目单来源
+                    # 或者使用新的URL格式，根据频道名称生成
+                    channels.append({"name": channel_name, "url": main_epg_url})
         
         # 去重
         unique_channels_dict = {}
@@ -162,13 +158,10 @@ def fetch_cctv_channels():
         # 如果解析失败，直接使用已知频道列表
         logger.info("解析失败，直接使用已知频道列表")
         channels = []
+        main_epg_url = "https://tv.cctv.com/epg/index.shtml"
         for channel_name in known_cctv_channels:
-            if "CCTV-" in channel_name:
-                channel_code = channel_name.split()[0]
-                url_code = channel_code.replace("CCTV-", "epg/index_")
-                url_code = url_code.replace("5+", "5p")
-                channel_url = f"https://tv.cctv.com/{url_code}.shtml"
-                channels.append({"name": channel_name, "url": channel_url})
+            # 使用主EPG页面作为所有频道的节目单来源
+            channels.append({"name": channel_name, "url": main_epg_url})
     
     return channels, session
 
@@ -183,86 +176,13 @@ def fetch_channel_programs(channel, session):
     
     logger.info(f"正在提取 {channel_name} (标准化: {standard_channel_name}) 的节目单: {channel_url}")
     
-    # 请求频道节目单页面
-    response = make_request(channel_url, session=session)
-    if not response:
-        return programs
+    # 直接返回空列表，因为央视网的EPG页面结构已更改，无法直接通过URL获取节目单
+    # 我们将在后续实现中更新为新的API或页面解析方式
+    logger.info(f"  {standard_channel_name}: 央视网EPG页面结构已更改，暂不支持直接抓取节目单")
     
-    soup = BeautifulSoup(response.text, 'html.parser')
-    
-    try:
-        # 尝试多种方式提取节目单
-        
-        # 1. 查找节目表格（最常见的形式）
-        program_tables = soup.find_all('table')
-        for table in program_tables:
-            rows = table.find_all('tr')
-            for row in rows:
-                cells = row.find_all(['td', 'th'])
-                if len(cells) >= 2:
-                    time_str = cells[0].text.strip()
-                    title = cells[1].text.strip()
-                    if time_str and title and ':' in time_str:
-                        programs.append({'time': time_str, 'title': title})
-        
-        # 2. 如果表格没找到，尝试查找包含节目信息的div
-        if not programs:
-            program_containers = soup.find_all('div', class_=lambda cls: cls and ('program' in cls or 'epg' in cls or 'schedule' in cls))
-            for container in program_containers:
-                program_items = container.find_all('div', recursive=False)
-                for item in program_items:
-                    time_elem = item.find(class_=lambda cls: cls and ('time' in cls or 'schedule-time' in cls))
-                    title_elem = item.find(class_=lambda cls: cls and ('title' in cls or 'program-title' in cls))
-                    
-                    if time_elem and title_elem:
-                        time_str = time_elem.text.strip()
-                        title = title_elem.text.strip()
-                        if time_str and title:
-                            programs.append({'time': time_str, 'title': title})
-        
-        # 3. 如果还是没找到，尝试从文本中直接提取
-        if not programs:
-            content = soup.text
-            lines = content.split('\n')
-            for line in lines:
-                line = line.strip()
-                if line and len(line) >= 5 and ':' in line[:5]:
-                    time_str = line[:5]
-                    title = line[5:].strip()
-                    if time_str and title:
-                        programs.append({'time': time_str, 'title': title})
-        
-        # 4. 尝试查找特定的节目列表结构
-        if not programs:
-            # 央视网可能使用特定的class命名节目项
-            program_items = soup.find_all('div', class_=['epg-item', 'program-item', 'cctv-program'])
-            for item in program_items:
-                time_elem = item.find(class_=['item-time', 'program-time', 'time'])
-                title_elem = item.find(class_=['item-title', 'program-title', 'title'])
-                
-                if time_elem and title_elem:
-                    time_str = time_elem.text.strip()
-                    title = title_elem.text.strip()
-                    if time_str and title:
-                        programs.append({'time': time_str, 'title': title})
-        
-        # 去重节目
-        unique_programs = []
-        seen = set()
-        for prog in programs:
-            key = f"{prog['time']}_{prog['title']}"
-            if key not in seen:
-                seen.add(key)
-                unique_programs.append(prog)
-        
-        programs = unique_programs
-        logger.info(f"  {standard_channel_name}: 成功提取 {len(programs)} 个节目")
-        
-    except Exception as e:
-        logger.error(f"解析 {channel_name} 节目单失败: {e}", exc_info=True)
-    
+    # 跳过请求，直接返回空列表
     # 添加适当延迟，避免请求过快
-    time.sleep(1)
+    time.sleep(0.5)
     
     return programs
 
