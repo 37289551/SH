@@ -89,23 +89,47 @@ def parse_program_item(item, channel_name):
     """解析单个节目项"""
     try:
         # 提取时间和标题
-        time_elem = item.find('span', class_=['time', 'program-time'])
-        title_elem = item.find('span', class_=['title', 'program-title'])
+        
+        # 1. 尝试查找所有span元素，按顺序提取时间和标题
+        spans = item.find_all('span')
+        if len(spans) >= 2:
+            # 通常第一个span是时间，第二个是标题
+            time_str = spans[0].text.strip()
+            title = spans[1].text.strip()
+            if time_str and title and ':' in time_str:
+                return {'time': time_str, 'title': title}
+        
+        # 2. 尝试查找带有time类的元素
+        time_elem = item.find(['span', 'div', 'p'], class_=lambda cls: cls and ('time' in cls or 'program-time' in cls or 'start-time' in cls))
+        title_elem = item.find(['span', 'div', 'p'], class_=lambda cls: cls and ('title' in cls or 'program-title' in cls or 'name' in cls))
         
         if time_elem and title_elem:
             time_str = time_elem.text.strip()
             title = title_elem.text.strip()
             
-            if time_str and title:
+            if time_str and title and ':' in time_str:
                 return {'time': time_str, 'title': title}
         
-        # 尝试另一种结构
-        time_text = item.find(text=re.compile(r'^\d{2}:\d{2}$'))
-        if time_text:
-            time_str = time_text.strip()
-            title_elem = time_text.find_next_sibling()
-            if title_elem:
-                title = title_elem.text.strip()
+        # 3. 尝试从文本中直接提取时间和标题
+        item_text = item.text.strip()
+        if item_text:
+            # 查找时间格式 HH:MM
+            time_match = re.search(r'(\d{2}:\d{2})', item_text)
+            if time_match:
+                time_str = time_match.group(1)
+                # 提取时间后的文本作为标题
+                title = item_text[time_match.end():].strip()
+                if title:
+                    return {'time': time_str, 'title': title}
+        
+        # 4. 尝试查找所有文本节点，寻找时间和标题
+        all_text = ' '.join(item.stripped_strings)
+        if all_text:
+            time_match = re.search(r'(\d{2}:\d{2})', all_text)
+            if time_match:
+                time_str = time_match.group(1)
+                # 提取时间后的文本作为标题
+                title = all_text[time_match.end():].strip()
                 if title:
                     return {'time': time_str, 'title': title}
         
@@ -119,40 +143,104 @@ def fetch_program_items(soup):
     programs = []
     
     try:
-        # 查找所有节目项
-        program_items = soup.find_all(['li', 'div'], class_=lambda cls: cls and ('program' in cls or 'epg' in cls or 'item' in cls))
-        logger.info(f"找到 {len(program_items)} 个节目项")
+        # 1. 首先尝试查找表格结构（TVMao常用的节目单格式）
+        tables = soup.find_all('table')
+        logger.info(f"找到 {len(tables)} 个表格")
         
-        # 解析每个节目项
-        for item in program_items:
-            # 尝试提取频道名称
-            channel_name = item.find(['span', 'div'], class_=lambda cls: cls and ('channel' in cls or 'tv' in cls))
-            channel_name = channel_name.text.strip() if channel_name else "未知频道"
-            
-            # 标准化频道名称
-            standard_channel_name = normalize_channel_name(channel_name)
-            
-            # 解析节目
-            program = parse_program_item(item, standard_channel_name)
-            if program:
-                programs.append((standard_channel_name, program))
+        for table in tables:
+            rows = table.find_all('tr')
+            for row in rows:
+                cells = row.find_all(['td', 'th'])
+                if len(cells) >= 2:
+                    # 分析表格结构
+                    if len(cells) > 2:
+                        # 多列表格，格式可能是：频道 | 时间 | 节目
+                        channel_name = cells[0].text.strip()
+                        time_str = cells[1].text.strip()
+                        title = cells[2].text.strip()
+                    else:
+                        # 两列表格，格式可能是：时间 | 节目
+                        channel_name = "未知频道"
+                        time_str = cells[0].text.strip()
+                        title = cells[1].text.strip()
+                    
+                    # 标准化频道名称
+                    standard_channel_name = normalize_channel_name(channel_name)
+                    
+                    if time_str and title and ':' in time_str:
+                        programs.append((standard_channel_name, {'time': time_str, 'title': title}))
         
-        # 如果没有找到节目项，尝试查找表格结构
+        # 如果表格结构没有找到节目，尝试其他结构
         if not programs:
-            tables = soup.find_all('table')
-            for table in tables:
-                rows = table.find_all('tr')
-                for row in rows:
-                    cells = row.find_all(['td', 'th'])
-                    if len(cells) >= 2:
-                        channel_name = cells[0].text.strip() if len(cells) > 2 else "未知频道"
-                        time_str = cells[-2].text.strip() if len(cells) > 2 else cells[0].text.strip()
-                        title = cells[-1].text.strip()
+            # 2. 尝试查找列表结构
+            program_containers = soup.find_all(['div', 'ul', 'ol'], class_=lambda cls: cls and ('program-list' in cls or 'epg-list' in cls or 'schedule-list' in cls))
+            logger.info(f"找到 {len(program_containers)} 个节目列表容器")
+            
+            for container in program_containers:
+                program_items = container.find_all(['li', 'div'], recursive=True)
+                for item in program_items:
+                    # 尝试提取频道名称
+                    channel_elem = item.find(['span', 'div', 'p'], class_=lambda cls: cls and ('channel' in cls or 'tv' in cls))
+                    channel_name = channel_elem.text.strip() if channel_elem else "未知频道"
+                    
+                    # 标准化频道名称
+                    standard_channel_name = normalize_channel_name(channel_name)
+                    
+                    # 解析节目
+                    program = parse_program_item(item, standard_channel_name)
+                    if program:
+                        programs.append((standard_channel_name, program))
+        
+        # 如果还是没有找到节目，尝试查找所有包含时间的元素
+        if not programs:
+            # 3. 查找所有包含时间格式的文本节点
+            time_pattern = re.compile(r'\d{2}:\d{2}')
+            time_elements = soup.find_all(text=time_pattern)
+            logger.info(f"找到 {len(time_elements)} 个包含时间的文本节点")
+            
+            for element in time_elements:
+                parent = element.parent
+                if parent:
+                    # 提取时间
+                    time_match = time_pattern.search(element)
+                    if time_match:
+                        time_str = time_match.group()
+                        
+                        # 尝试提取频道名称和标题
+                        # 查看父元素的父元素，寻找频道信息
+                        grandparent = parent.parent
+                        channel_name = "未知频道"
+                        
+                        # 尝试从祖先元素中查找频道名称
+                        for ancestor in [grandparent, parent]:
+                            if ancestor:
+                                channel_elem = ancestor.find(['span', 'div', 'p'], text=re.compile(r'CCTV|央视|卫视', re.IGNORECASE))
+                                if channel_elem:
+                                    channel_name = channel_elem.text.strip()
+                                    break
                         
                         # 标准化频道名称
                         standard_channel_name = normalize_channel_name(channel_name)
                         
-                        if time_str and title and ':' in time_str:
+                        # 提取标题
+                        # 尝试从兄弟元素中查找标题
+                        title = ""
+                        siblings = list(parent.next_siblings)
+                        for sibling in siblings:
+                            if hasattr(sibling, 'text'):
+                                title_text = sibling.text.strip()
+                                if title_text and ':' not in title_text:
+                                    title = title_text
+                                    break
+                        
+                        # 如果没有找到兄弟元素的标题，尝试从父元素中提取
+                        if not title:
+                            parent_text = parent.text.strip()
+                            if parent_text:
+                                # 去除时间部分，剩下的作为标题
+                                title = parent_text.replace(time_str, '').strip()
+                        
+                        if time_str and title:
                             programs.append((standard_channel_name, {'time': time_str, 'title': title}))
         
         logger.info(f"成功解析 {len(programs)} 个节目")
@@ -223,17 +311,22 @@ def generate_xmltv(programs_dict):
 <tv generator-info-name="TVMao EPG Generator" generator-info-url="https://www.tvmao.com/">
 '''
     
+    # 统计节目数量
+    total_programs = 0
+    
     for channel_name, programs in programs_dict.items():
         # 生成频道ID（使用频道名的拼音或缩写）
         channel_id = channel_name.replace(' ', '_').replace('-', '_').replace(':', '_')
         
         # 添加频道信息
-        xml_content += f'''\n  <channel id="{channel_id}">
+        xml_content += f'''
+  <channel id="{channel_id}">
     <display-name>{channel_name}</display-name>
   </channel>
 '''
         
         # 添加节目信息
+        channel_program_count = 0
         for program in programs:
             time_str = program['time']
             title = program['title']
@@ -246,17 +339,26 @@ def generate_xmltv(programs_dict):
                 hour, minute = map(int, time_str.split(':'))
                 end_time = datetime.combine(datetime.now().date(), datetime.min.time()) + timedelta(hours=hour, minutes=minute+30)
                 end_time_str = end_time.strftime(f"{today}%H%M00")
-            except:
-                # 如果时间解析失败，跳过该节目
-                continue
-            
-            # 添加节目
-            xml_content += f'''\n  <programme channel="{channel_id}" start="{start_time}" stop="{end_time_str}">
+                
+                # 添加节目
+                xml_content += f'''
+  <programme channel="{channel_id}" start="{start_time}" stop="{end_time_str}">
     <title lang="zh">{title}</title>
   </programme>
 '''
+                channel_program_count += 1
+                total_programs += 1
+            except Exception as e:
+                # 如果时间解析失败，记录日志并继续
+                logger.warning(f"解析节目时间失败，跳过节目: {title}, 时间: {time_str}, 错误: {e}")
+                continue
+        
+        logger.info(f"为频道 {channel_name} 生成了 {channel_program_count} 个节目元素")
     
-    xml_content += '''\n</tv>\n'''
+    logger.info(f"共生成了 {total_programs} 个节目元素")
+    xml_content += '''
+</tv>
+'''
     
     return xml_content
 
