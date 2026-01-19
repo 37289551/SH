@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 import logging
 from datetime import datetime, timedelta
 import os
+import re
 
 # 配置日志 - 设置为DEBUG级别以获取更详细的信息
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -150,7 +151,21 @@ def fetch_tvsou_programs():
     satellite_programs = fetch_tvsou_channel_programs(satellite_url, "卫视")
     programs_dict.update(satellite_programs)
     
-    return programs_dict
+    # 过滤掉不需要的频道
+    filtered_programs = {}
+    for channel_name, programs in programs_dict.items():
+        # 跳过分类标签和日期标签
+        if channel_name in ['央视', '卫视'] or re.match(r'^(周一|周二|周三|周四|周五|周六|周日)\(\d{2}\.\d{2}\)$', channel_name):
+            logger.info(f"过滤掉不需要的频道: {channel_name}")
+            continue
+        
+        # 使用is_cctv_or_satellite函数检查是否是真正的央视或卫视频道
+        if is_cctv_or_satellite(channel_name):
+            filtered_programs[channel_name] = programs
+        else:
+            logger.info(f"过滤掉非央视/卫视频道: {channel_name}")
+    
+    return filtered_programs
 
 def is_cctv_or_satellite(channel_name):
     """判断是否是央视或卫视频道"""
