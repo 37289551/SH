@@ -229,7 +229,7 @@ def save_xmltv(xmltv_content, output_file):
     
     # 保存gz压缩文件
     if CONFIG.get('output', {}).get('gzip', True):
-        gz_file = f"{output_file}.xml.gz"
+        gz_file = f"{output_file}.gz"
         with open(xml_file, 'rb') as f_in:
             with gzip.open(gz_file, 'wb') as f_out:
                 shutil.copyfileobj(f_in, f_out)
@@ -253,8 +253,8 @@ def clean_old_files():
     for filename in os.listdir(output_dir):
         file_path = os.path.join(output_dir, filename)
         if os.path.isfile(file_path):
-            # 只处理XML和XML.GZ文件
-            if filename.endswith('.xml') or filename.endswith('.xml.gz'):
+            # 只处理XML和GZ文件
+            if filename.endswith('.xml') or filename.endswith('.xml.gz') or filename.endswith('.gz'):
                 files.append((file_path, os.path.getmtime(file_path)))
     
     # 清理过期文件
@@ -410,7 +410,7 @@ def main():
     # 保存到文件
     output_dir = CONFIG.get('output', {}).get('dir', 'output')
     today = datetime.now().strftime('%Y%m%d')
-    output_file = os.path.join(output_dir, f'epg_{today}')
+    output_file = os.path.join(output_dir, f'{today}')
     
     # 保存XMLTV文件和压缩文件
     save_xmltv(xmltv_content, output_file)
