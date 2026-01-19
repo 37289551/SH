@@ -1,0 +1,66 @@
+name: EPGO - 单独测试数据源
+
+on:
+  # 允许手动触发，支持选择测试脚本
+  workflow_dispatch:
+    inputs:
+      test_script:
+        description: '要运行的测试脚本文件名'
+        required: true
+        default: 'test_tvsou.py'
+        type: choice
+        options:
+          - test_tvsou.py
+          - test_tvmao.py
+          - test_cctv.py
+          - test_epgo.py
+
+jobs:
+  test-source:
+    runs-on: ubuntu-latest
+    
+    steps:
+    # 1. 检出代码
+    - name: 检出代码
+      uses: actions/checkout@v4
+    
+    # 2. 设置Python环境
+    - name: 设置Python 3.10
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    # 3. 安装依赖
+    - name: 安装依赖
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    # 4. 运行指定的测试脚本
+    - name: 运行测试脚本
+      run: python ${{ inputs.test_script }}
+    
+    # 5. 上传生成的节目单文件（如果有）
+    - name: 上传测试输出文件
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-output-${{ inputs.test_script }}
+        path: output/
+        retention-days: 3
+    
+    # 6. 记录运行结果
+    - name: 记录运行结果
+      run: |
+        echo "测试脚本 ${{ inputs.test_script }} 运行完成"
+        echo "当前目录结构："
+        ls -la
+        echo "输出目录内容："
+        ls -la output/ || echo "输出目录不存在"
+    
+    # 7. 清理旧的输出文件
+    - name: 清理测试文件
+      if: always()
+      run: |
+        # 删除测试生成的文件
+        find output/ -name "*.xml" -o -name "*.xml.gz" | xargs -r rm -f
+        echo "清理完成"
