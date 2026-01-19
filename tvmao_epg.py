@@ -156,19 +156,24 @@ def fetch_program_items(soup):
                     if len(cells) > 2:
                         # 多列表格，格式可能是：频道 | 时间 | 节目
                         channel_name = cells[0].text.strip()
-                        time_str = cells[1].text.strip()
+                        cell_text = cells[1].text.strip()
                         title = cells[2].text.strip()
                     else:
                         # 两列表格，格式可能是：时间 | 节目
                         channel_name = "未知频道"
-                        time_str = cells[0].text.strip()
+                        cell_text = cells[0].text.strip()
                         title = cells[1].text.strip()
                     
-                    # 标准化频道名称
-                    standard_channel_name = normalize_channel_name(channel_name)
-                    
-                    if time_str and title and ':' in time_str:
-                        programs.append((standard_channel_name, {'time': time_str, 'title': title}))
+                    # 从单元格文本中提取纯时间格式 HH:MM
+                    time_match = re.search(r'(\d{2}:\d{2})', cell_text)
+                    if time_match:
+                        time_str = time_match.group(1)
+                        
+                        # 标准化频道名称
+                        standard_channel_name = normalize_channel_name(channel_name)
+                        
+                        if time_str and title:
+                            programs.append((standard_channel_name, {'time': time_str, 'title': title}))
         
         # 如果表格结构没有找到节目，尝试其他结构
         if not programs:
