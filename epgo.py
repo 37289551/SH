@@ -1,413 +1,101 @@
-import requests
 import logging
-from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
 import time
 import os
-import re
+import yaml
+import gzip
+import shutil
+import difflib
 
-# 配置日志 - 设置为DEBUG级别以获取更详细的信息
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+# 默认配置文件路径
+DEFAULT_CONFIG_PATH = "config.yaml"
+
+# 读取配置文件
+def load_config(config_path=DEFAULT_CONFIG_PATH):
+    """
+    读取配置文件
+    
+    Args:
+        config_path: 配置文件路径
+        
+    Returns:
+        dict: 配置字典
+    """
+    try:
+        with open(config_path, 'r', encoding='utf-8') as f:
+            config = yaml.safe_load(f)
+        return config
+    except FileNotFoundError:
+        logger.error(f"配置文件未找到: {config_path}")
+        return {}
+    except yaml.YAMLError as e:
+        logger.error(f"解析配置文件失败: {e}")
+        return {}
+
+# 加载配置
+CONFIG = load_config()
+
+# 配置日志
+log_level = CONFIG.get('logging', {}).get('level', 'INFO').upper()
+log_format = CONFIG.get('logging', {}).get('format', '%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=getattr(logging, log_level), format=log_format)
 logger = logging.getLogger(__name__)
+
+# 添加文件日志
+if CONFIG.get('logging', {}).get('file_enabled', True):
+    log_file = CONFIG.get('logging', {}).get('file_path', 'epgo.log')
+    file_handler = logging.FileHandler(log_file, encoding='utf-8')
+    file_handler.setLevel(getattr(logging, log_level))
+    file_handler.setFormatter(logging.Formatter(log_format))
+    logger.addHandler(file_handler)
 
 # 导入频道配置
 from channels import CHANNELS
 
-def make_request(url, headers=None, retry=2, delay=2, method='GET', data=None):
-    """带重试机制的HTTP请求，支持GET和POST"""
-    if headers is None:
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        }
-    
-    for attempt in range(retry):
-        try:
-            logger.info(f"请求URL: {url} (尝试 {attempt+1}/{retry})，方法: {method}")
-            if method.upper() == 'POST':
-                response = requests.post(url, headers=headers, data=data, timeout=15)
-            else:
-                response = requests.get(url, headers=headers, params=data, timeout=15)
-            response.raise_for_status()
-            logger.info(f"成功获取URL: {url}，状态码: {response.status_code}")
-            return response
-        except requests.RequestException as e:
-            logger.warning(f"请求失败 (尝试 {attempt+1}/{retry}): {e}")
-            if attempt < retry - 1:
-                time.sleep(delay)
-            else:
-                logger.error(f"所有重试均失败: {url}")
-                return None
+# 导入频道名称映射函数
+from channel_mapping import normalize_channel_name
 
-def fetch_tvmao_programs(soup, channel_name):
-    """专门处理tvmao.com的节目抓取"""
-    programs = []
-    
-    try:
-        logger.info(f"开始解析tvmao.com节目页面")
-        
-        # 1. 首先解析页面中直接可用的节目列表
-        logger.info("解析页面中直接可用的节目列表")
-        
-        # 查找所有节目项li元素
-        program_items = soup.find_all('li', class_=['bg_f7', 'bg_f3', ''])
-        logger.info(f"找到 {len(program_items)} 个直接可用的li节目项")
-        
-        # 解析直接可用的节目
-        for item in program_items:
-            try:
-                over_hide_div = item.find('div', class_='over_hide')
-                if over_hide_div:
-                    time_span = over_hide_div.find('span', class_=['am', 'pm'])
-                    p_show_span = over_hide_div.find('span', class_='p_show')
-                    
-                    if time_span and p_show_span:
-                        name_a = p_show_span.find('a')
-                        if name_a:
-                            time_str = time_span.get_text(strip=True)
-                            title_str = name_a.get_text(strip=True)
-                            
-                            if time_str and title_str and len(time_str) >= 4:
-                                programs.append({'time': time_str, 'title': title_str})
-                                logger.debug(f"找到节目: {time_str} - {title_str}")
-            except Exception as e:
-                logger.error(f"解析节目项失败: {e}")
-        
-        logger.info(f"直接解析完成，共找到 {len(programs)} 个节目")
-        
-    except Exception as e:
-        logger.error(f"解析tvmao.com节目失败: {e}", exc_info=True)
-    
-    return programs
+# 导入各个网站的节目单抓取函数
+source_functions = {
+    'tvsou': None,
+    'tvmao': None,
+    'cctv': None
+}
 
-def fetch_tvmao_programs_with_dynamic(soup, channel_name, url):
-    """处理tvmao.com的节目抓取，包括动态加载内容"""
-    programs = []
-    
-    try:
-        logger.info(f"开始解析tvmao.com节目页面，包括动态加载内容")
-        
-        # 1. 首先解析页面中直接可用的节目列表
-        logger.info("解析页面中直接可用的节目列表")
-        
-        # 查找所有节目项li元素
-        program_items = soup.find_all('li', class_=['bg_f7', 'bg_f3', ''])
-        logger.info(f"找到 {len(program_items)} 个直接可用的li节目项")
-        
-        # 解析直接可用的节目
-        for item in program_items:
-            try:
-                over_hide_div = item.find('div', class_='over_hide')
-                if over_hide_div:
-                    time_span = over_hide_div.find('span', class_=['am', 'pm'])
-                    p_show_span = over_hide_div.find('span', class_='p_show')
-                    
-                    if time_span and p_show_span:
-                        name_a = p_show_span.find('a')
-                        if name_a:
-                            time_str = time_span.get_text(strip=True)
-                            title_str = name_a.get_text(strip=True)
-                            
-                            if time_str and title_str and len(time_str) >= 4:
-                                programs.append({'time': time_str, 'title': title_str})
-                                logger.debug(f"找到节目: {time_str} - {title_str}")
-            except Exception as e:
-                logger.error(f"解析节目项失败: {e}")
-        
-        logger.info(f"直接解析完成，共找到 {len(programs)} 个节目")
-        
-        # 2. 检查是否有"查看更多"按钮，如有则尝试加载更多节目
-        logger.info("检查是否需要加载更多节目")
-        more_epg_btn = soup.find('a', class_='more-epg2')
-        if more_epg_btn:
-            logger.info("发现\"查看更多\"按钮，尝试加载更多节目")
-            
-            # 从URL中提取参数
-            # URL格式：https://www.tvmao.com/program/[tc]-[cc]-w[w].html
-            # 例如：https://www.tvmao.com/program/CCTV-CCTV1-w5.html
-            import re
-            match = re.match(r'.*program/([^-]+)-([^-]+)-w(\d+)\.html', url)
-            if match:
-                tc = match.group(1)
-                cc = match.group(2)
-                w = match.group(3)
-                logger.info(f"从URL中提取到参数: tc={tc}, cc={cc}, w={w}")
-                
-                # 尝试从页面中提取TVM_TOKEN
-                token = None
-                token_match = re.search(r'window\["TVM_TOKEN"\]\s*=\s*["\']([^"\']+)["\']', str(soup))
-                if not token_match:
-                    token_match = re.search(r'TVM_TOKEN\s*=\s*["\']([^"\']+)["\']', str(soup))
-                if token_match:
-                    token = token_match.group(1)
-                    logger.info(f"从页面中提取到TVM_TOKEN: {token}")
-                else:
-                    logger.warning(f"未从页面中找到TVM_TOKEN")
-                
-                # 构造动态加载请求
-                dynamic_url = "https://www.tvmao.com/servlet/channelEpg"
-                params = {
-                    'tc': tc,
-                    'cc': cc,
-                    'w': w
-                }
-                
-                # 添加token参数（如果找到）
-                if token:
-                    params['token'] = token
-                
-                logger.info(f"发送动态加载请求到: {dynamic_url}")
-                logger.info(f"请求参数: {params}")
-                
-                # 发送POST请求获取动态内容
-                response = make_request(dynamic_url, 
-                                     headers={
-                                         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-                                         'Content-Type': 'application/x-www-form-urlencoded',
-                                         'Referer': url
-                                     },
-                                     method='POST',
-                                     data=params)
-                
-                if response:
-                    import json
-                    try:
-                        # 解析JSON响应
-                        logger.debug(f"动态加载响应内容: {response.text}")
-                        data = json.loads(response.text)
-                        logger.info(f"动态加载请求成功，响应状态: {data[0]}")
-                        
-                        if data[0] > 0:
-                            # 成功获取动态内容
-                            dynamic_html = data[1]
-                            logger.info(f"获取到动态HTML内容，长度: {len(dynamic_html)} 字符")
-                            
-                            # 解析动态加载的HTML内容
-                            dynamic_soup = BeautifulSoup(dynamic_html, 'html.parser')
-                            
-                            # 查找动态加载的节目项
-                            dynamic_program_items = dynamic_soup.find_all('li', class_=['bg_f7', 'bg_f3', ''])
-                            logger.info(f"从动态内容中找到 {len(dynamic_program_items)} 个节目项")
-                            
-                            # 解析动态加载的节目
-                            for item in dynamic_program_items:
-                                try:
-                                    over_hide_div = item.find('div', class_='over_hide')
-                                    if over_hide_div:
-                                        time_span = over_hide_div.find('span', class_=['am', 'pm'])
-                                        p_show_span = over_hide_div.find('span', class_='p_show')
-                                        
-                                        if time_span and p_show_span:
-                                            name_a = p_show_span.find('a')
-                                            if name_a:
-                                                time_str = time_span.get_text(strip=True)
-                                                title_str = name_a.get_text(strip=True)
-                                                
-                                                if time_str and title_str and len(time_str) >= 4:
-                                                    # 去重检查
-                                                    if not any(p['time'] == time_str and p['title'] == title_str for p in programs):
-                                                        programs.append({'time': time_str, 'title': title_str})
-                                                        logger.debug(f"从动态内容找到节目: {time_str} - {title_str}")
-                                except Exception as e:
-                                    logger.error(f"解析动态节目项失败: {e}")
-                            
-                            logger.info(f"动态内容解析完成，新增 {len(programs) - len(program_items)} 个节目")
-                        else:
-                            logger.info(f"动态加载请求返回状态: {data[0]}, 没有更多内容")
-                    except json.JSONDecodeError as e:
-                        logger.error(f"解析动态内容JSON失败: {e}")
-                        logger.warning(f"tvmao.com API可能已不可用，跳过动态加载")
-                    except Exception as e:
-                        logger.error(f"处理动态内容失败: {e}", exc_info=True)
-                        logger.warning(f"tvmao.com API可能已不可用，跳过动态加载")
-                else:
-                    logger.warning(f"动态加载请求失败")
-                    logger.warning(f"tvmao.com API可能已不可用，跳过动态加载")
-            else:
-                logger.warning(f"无法从URL中提取参数: {url}")
-        else:
-            logger.info("没有发现\"查看更多\"按钮，不需要加载更多节目")
-        
-        logger.info(f"tvmao.com节目解析完成，共找到 {len(programs)} 个节目")
-        
-    except Exception as e:
-        logger.error(f"解析tvmao.com节目失败: {e}", exc_info=True)
-    
-    return programs
+try:
+    from tvsou_epg import fetch_tvsou_programs
+    source_functions['tvsou'] = fetch_tvsou_programs
+    logger.info("成功导入tvsou_epg模块")
+except ImportError as e:
+    logger.error(f"导入tvsou_epg模块失败: {e}")
 
-def fetch_cctv_programs(channel_id, channel_info):
-    """抓取央视节目信息"""
-    programs = []
-    channel_name = channel_info['name']
-    
-    try:
-        # 替换URL中的星期参数
-        today = datetime.now()
-        weekday = today.weekday() + 1  # 转换为1-7（1=周一）
-        
-        # 收集所有tvmao.com URL，优先使用
-        all_urls = []
-        
-        # 检查主URL是否为tvmao.com
-        main_url = channel_info['url'].replace('w1', f'w{weekday}')
-        if 'tvmao.com' in main_url:
-            all_urls.append(('主URL', main_url))
-        
-        # 收集所有tvmao.com备用URL
-        if channel_info.get('backup_urls'):
-            for backup_url in channel_info['backup_urls']:
-                backup_url_with_weekday = backup_url.replace('w1', f'w{weekday}')
-                if 'tvmao.com' in backup_url_with_weekday:
-                    all_urls.append(('备用URL', backup_url_with_weekday))
-        
-        # 如果没有tvmao.com URL，添加所有可用URL
-        if not all_urls:
-            all_urls.append(('主URL', main_url))
-            if channel_info.get('backup_urls'):
-                for backup_url in channel_info['backup_urls']:
-                    all_urls.append(('备用URL', backup_url.replace('w1', f'w{weekday}')))
-        
-        logger.info(f"优先使用tvmao.com抓取{channel_name}节目")
-        
-        # 尝试所有URL，最多尝试2个
-        for url_type, url in all_urls[:2]:  # 最多尝试2个URL
-            logger.info(f"{url_type}抓取{channel_name}节目，URL: {url}")
-            response = make_request(url)
-            
-            if response:
-                soup = BeautifulSoup(response.text, 'html.parser')
-                
-                # 检查是否为tvmao.com URL
-                if 'tvmao.com' in url:
-                    logger.info(f"使用tvmao.com专用解析器，支持动态加载")
-                    programs = fetch_tvmao_programs_with_dynamic(soup, channel_name, url)
-                else:
-                    logger.info(f"使用通用解析器")
-                    # 通用解析逻辑
-                    selectors = [
-                        '.epg-list .epg-item',
-                        '.program-list .program-item',
-                        'div[class*="epg"] div[class*="item"]',
-                        '.epg-item',
-                        '.program-item'
-                    ]
-                    
-                    for selector in selectors:
-                        program_elements = soup.select(selector)
-                        if program_elements:
-                            logger.info(f"使用选择器 {selector} 找到 {len(program_elements)} 个节目元素")
-                            for item in program_elements:
-                                try:
-                                    time_elem = item.select_one('.time') or item.select_one('.program-time') or item.select_one('[class*="time"]') or item.find('span')
-                                    title_elem = item.select_one('.title') or item.select_one('.program-title') or item.select_one('[class*="title"]') or item.find('a')
-                                    
-                                    if time_elem and title_elem:
-                                        time_str = time_elem.get_text(strip=True)
-                                        title = title_elem.get_text(strip=True)
-                                        if time_str and title and len(time_str) >= 4:
-                                            programs.append({'time': time_str, 'title': title})
-                                except Exception as e:
-                                    logger.error(f"解析节目元素失败: {e}")
-                            break
-                
-                # 如果获取到节目，停止尝试
-                if programs:
-                    logger.info(f"成功获取{len(programs)}个节目")
-                    break
-    except Exception as e:
-        logger.error(f"抓取{channel_name}节目失败: {e}", exc_info=True)
-    
-    if not programs:
-        logger.warning(f"   未获取到节目信息")
-    
-    return programs
+try:
+    from tvmao_epg import fetch_tvmao_programs
+    source_functions['tvmao'] = fetch_tvmao_programs
+    logger.info("成功导入tvmao_epg模块")
+except ImportError as e:
+    logger.error(f"导入tvmao_epg模块失败: {e}")
 
-def fetch_satellite_programs(channel_id, channel_info):
-    """抓取卫视频道节目信息"""
-    programs = []
-    channel_name = channel_info['name']
-    
-    try:
-        # 替换URL中的星期参数
-        today = datetime.now()
-        weekday = today.weekday() + 1  # 转换为1-7（1=周一）
-        
-        # 收集所有tvmao.com URL，优先使用
-        all_urls = []
-        
-        # 检查主URL是否为tvmao.com
-        main_url = channel_info['url'].replace('w1', f'w{weekday}')
-        if 'tvmao.com' in main_url:
-            all_urls.append(('主URL', main_url))
-        
-        # 收集所有tvmao.com备用URL
-        if channel_info.get('backup_urls'):
-            for backup_url in channel_info['backup_urls']:
-                backup_url_with_weekday = backup_url.replace('w1', f'w{weekday}')
-                if 'tvmao.com' in backup_url_with_weekday:
-                    all_urls.append(('备用URL', backup_url_with_weekday))
-        
-        # 如果没有tvmao.com URL，添加所有可用URL
-        if not all_urls:
-            all_urls.append(('主URL', main_url))
-            if channel_info.get('backup_urls'):
-                for backup_url in channel_info['backup_urls']:
-                    all_urls.append(('备用URL', backup_url.replace('w1', f'w{weekday}')))
-        
-        logger.info(f"优先使用tvmao.com抓取{channel_name}节目")
-        
-        # 尝试所有URL，最多尝试2个
-        for url_type, url in all_urls[:2]:  # 最多尝试2个URL
-            logger.info(f"{url_type}抓取{channel_name}节目，URL: {url}")
-            response = make_request(url)
-            
-            if response:
-                soup = BeautifulSoup(response.text, 'html.parser')
-                
-                # 检查是否为tvmao.com URL
-                if 'tvmao.com' in url:
-                    logger.info(f"使用tvmao.com专用解析器，支持动态加载")
-                    programs = fetch_tvmao_programs_with_dynamic(soup, channel_name, url)
-                else:
-                    logger.info(f"使用通用解析器")
-                    # 通用解析逻辑
-                    selectors = [
-                        '.program-item',
-                        '.epg-item',
-                        'div[class*="program"]',
-                        'div[class*="epg"]'
-                    ]
-                    
-                    for selector in selectors:
-                        program_elements = soup.select(selector)
-                        if program_elements:
-                            logger.info(f"找到 {len(program_elements)} 个节目元素")
-                            for item in program_elements:
-                                try:
-                                    time_elem = item.select_one('.time') or item.select_one('.program-time') or item.select_one('[class*="time"]')
-                                    title_elem = item.select_one('.title') or item.select_one('.program-title') or item.select_one('[class*="title"]')
-                                    
-                                    if time_elem and title_elem:
-                                        time_str = time_elem.get_text(strip=True)
-                                        title = title_elem.get_text(strip=True)
-                                        if time_str and title:
-                                            programs.append({'time': time_str, 'title': title})
-                                except Exception as e:
-                                    logger.error(f"解析节目元素失败: {e}")
-                            break
-                
-                # 如果获取到节目，停止尝试
-                if programs:
-                    logger.info(f"成功获取{len(programs)}个节目")
-                    break
-    except Exception as e:
-        logger.error(f"抓取{channel_name}节目失败: {e}", exc_info=True)
-    
-    if not programs:
-        logger.warning(f"   未获取到节目信息")
-    
-    return programs
+try:
+    from cctv_epg import fetch_cctv_programs
+    source_functions['cctv'] = fetch_cctv_programs
+    logger.info("成功导入cctv_epg模块")
+except ImportError as e:
+    logger.error(f"导入cctv_epg模块失败: {e}")
+
+
+
+
+
+
+
+
+
+
+
+
 
 def generate_xmltv(programs_dict):
     """生成XMLTV格式的EPG文件"""
@@ -462,53 +150,302 @@ def generate_xmltv(programs_dict):
     
     return pretty_xml
 
+def calculate_success_rate(programs_dict, total_channels):
+    """
+    计算节目单抓取成功率
+    
+    Args:
+        programs_dict: 节目单字典
+        total_channels: 总频道数
+        
+    Returns:
+        float: 成功率（0-100）
+    """
+    if total_channels == 0:
+        return 0.0
+    
+    # 统计成功获取节目单的频道数量
+    success_count = 0
+    for channel_id, channel_data in programs_dict.items():
+        if len(channel_data['programs']) > 0:
+            success_count += 1
+    
+    success_rate = (success_count / total_channels) * 100
+    return round(success_rate, 2)
+
+def merge_programs(existing_programs, new_programs):
+    """
+    合并节目单数据
+    
+    Args:
+        existing_programs: 已有的节目单
+        new_programs: 新的节目单
+        
+    Returns:
+        list: 合并后的节目单
+    """
+    if not existing_programs:
+        return new_programs
+    
+    if not new_programs:
+        return existing_programs
+    
+    # 合并节目单，去重
+    merged = existing_programs.copy()
+    
+    # 创建已存在节目的集合，用于去重
+    existing_set = {(prog['time'], prog['title']) for prog in merged}
+    
+    for prog in new_programs:
+        prog_key = (prog['time'], prog['title'])
+        if prog_key not in existing_set:
+            merged.append(prog)
+            existing_set.add(prog_key)
+    
+    # 按时间排序
+    merged.sort(key=lambda x: x['time'])
+    
+    return merged
+
+def save_xmltv(xmltv_content, output_file):
+    """
+    保存XMLTV文件，并根据配置生成gz压缩文件
+    
+    Args:
+        xmltv_content: XMLTV内容
+        output_file: 输出文件路径（不包含扩展名）
+    """
+    output_dir = CONFIG.get('output', {}).get('dir', 'output')
+    
+    # 确保输出目录存在
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    
+    # 保存未压缩的XMLTV文件
+    xml_file = f"{output_file}.xml"
+    with open(xml_file, 'w', encoding='utf-8') as f:
+        f.write(xmltv_content)
+    logger.info(f"保存XMLTV文件: {xml_file}")
+    
+    # 保存gz压缩文件
+    if CONFIG.get('output', {}).get('gzip', True):
+        gz_file = f"{output_file}.xml.gz"
+        with open(xml_file, 'rb') as f_in:
+            with gzip.open(gz_file, 'wb') as f_out:
+                shutil.copyfileobj(f_in, f_out)
+        logger.info(f"保存压缩XMLTV文件: {gz_file}")
+
+def clean_old_files():
+    """
+    清理旧的输出文件，保留最近N天的文件
+    """
+    output_dir = CONFIG.get('output', {}).get('dir', 'output')
+    keep_days = CONFIG.get('output', {}).get('keep_days', 7)
+    
+    if not os.path.exists(output_dir):
+        return
+    
+    current_time = time.time()
+    cutoff_time = current_time - (keep_days * 24 * 3600)
+    
+    # 获取所有输出文件
+    files = []
+    for filename in os.listdir(output_dir):
+        file_path = os.path.join(output_dir, filename)
+        if os.path.isfile(file_path):
+            # 只处理XML和XML.GZ文件
+            if filename.endswith('.xml') or filename.endswith('.xml.gz'):
+                files.append((file_path, os.path.getmtime(file_path)))
+    
+    # 清理过期文件
+    deleted_count = 0
+    for file_path, mtime in files:
+        if mtime < cutoff_time:
+            os.remove(file_path)
+            deleted_count += 1
+            logger.info(f"删除过期文件: {file_path}")
+    
+    if deleted_count > 0:
+        logger.info(f"共删除 {deleted_count} 个过期文件")
+
+def match_channel(channel_name):
+    """
+    优化的频道匹配算法，支持模糊匹配
+    
+    Args:
+        channel_name: 要匹配的频道名称
+        
+    Returns:
+        str: 匹配到的channel_id，如果没有匹配到则返回None
+    """
+    # 标准化输入频道名称
+    standard_input = normalize_channel_name(channel_name)
+    
+    # 精确匹配
+    for channel_id, channel_info in CHANNELS.items():
+        standard_channel = normalize_channel_name(channel_info['name'])
+        if standard_input == standard_channel:
+            return channel_id
+    
+    # 如果启用了模糊匹配
+    if CONFIG.get('channel_matching', {}).get('fuzzy_match', True):
+        best_match = None
+        best_score = 0
+        threshold = CONFIG.get('channel_matching', {}).get('fuzzy_threshold', 0.8)
+        
+        for channel_id, channel_info in CHANNELS.items():
+            channel_name = channel_info['name']
+            standard_channel = normalize_channel_name(channel_name)
+            
+            # 计算相似度
+            score = difflib.SequenceMatcher(None, standard_input, standard_channel).ratio()
+            
+            if score > best_score and score >= threshold:
+                best_score = score
+                best_match = channel_id
+        
+        if best_match:
+            logger.debug(f"模糊匹配成功: {channel_name} -> {CHANNELS[best_match]['name']} (相似度: {best_score:.2f})")
+            return best_match
+    
+    return None
+
 def main():
     """主函数"""
     logger.info("开始生成EPG...")
     
-    programs_dict = {}
+    total_channels = len(CHANNELS)
+    logger.info(f"总共有 {total_channels} 个频道需要抓取")
     
-    # 处理所有频道
+    # 初始化结果字典
+    final_programs_dict = {}
+    
+    # 从配置文件读取源优先级
+    sources_config = CONFIG.get('sources', [])
+    sources = []
+    for source_config in sources_config:
+        source_name = source_config['name']
+        enabled = source_config.get('enabled', True)
+        if enabled and source_name in source_functions:
+            sources.append((source_name, source_functions[source_name]))
+    
+    # 如果配置文件中没有指定源，使用默认顺序
+    if not sources:
+        sources = [
+            ('tvsou', source_functions['tvsou']),
+            ('tvmao', source_functions['tvmao']),
+            ('cctv', source_functions['cctv'])
+        ]
+    
+    # 从配置文件读取成功率阈值
+    success_threshold = CONFIG.get('success_threshold', 80.0)
+    logger.info(f"成功率阈值: {success_threshold}%")
+    
+    # 按优先级处理每个源
+    for source_name, source_func in sources:
+        if not source_func:
+            logger.warning(f"跳过不可用的源: {source_name}")
+            continue
+        
+        logger.info(f"\n=== 使用 {source_name} 源抓取节目单 ===")
+        
+        # 调用源的抓取函数
+        try:
+            # 调用源函数
+            source_programs = source_func()
+            
+            logger.info(f"{source_name} 源抓取完成，获取到 {len(source_programs)} 个频道的节目单")
+            
+            # 将源返回的节目单转换为标准格式
+            standard_programs = {}
+            for channel_name, programs in source_programs.items():
+                # 优化的频道匹配
+                matched_channel = match_channel(channel_name)
+                
+                if matched_channel:
+                    standard_programs[matched_channel] = {
+                        'name': CHANNELS[matched_channel]['name'],
+                        'programs': programs
+                    }
+                else:
+                    logger.debug(f"未找到匹配的频道: {channel_name}")
+            
+            logger.info(f"{source_name} 源匹配到 {len(standard_programs)} 个频道")
+            
+            # 合并到最终结果
+            for channel_id, channel_data in standard_programs.items():
+                if channel_id in final_programs_dict:
+                    # 如果频道已存在，合并节目单
+                    final_programs_dict[channel_id]['programs'] = merge_programs(
+                        final_programs_dict[channel_id]['programs'],
+                        channel_data['programs']
+                    )
+                else:
+                    # 如果频道不存在，直接添加
+                    final_programs_dict[channel_id] = channel_data
+            
+            # 计算当前成功率
+            current_rate = calculate_success_rate(final_programs_dict, total_channels)
+            logger.info(f"当前成功率: {current_rate}%")
+            
+            # 如果成功率达到阈值，停止后续源的调用
+            if current_rate >= success_threshold:
+                logger.info(f"成功率已达到 {success_threshold}% 以上，停止后续源的调用")
+                break
+            
+        except Exception as e:
+            logger.error(f"使用 {source_name} 源抓取节目单失败: {e}", exc_info=True)
+    
+    # 确保所有频道都在结果中
     for channel_id, channel_info in CHANNELS.items():
-        logger.info(f"正在抓取 {channel_info['name']}...")
-        
-        # 根据频道source字段选择抓取函数
-        if channel_info.get('source') == 'satellite':
-            programs = fetch_satellite_programs(channel_id, channel_info)
-        else:
-            programs = fetch_cctv_programs(channel_id, channel_info)
-        
-        programs_dict[channel_id] = {
-            'name': channel_info['name'],
-            'programs': programs
-        }
+        if channel_id not in final_programs_dict:
+            final_programs_dict[channel_id] = {
+                'name': channel_info['name'],
+                'programs': []
+            }
     
     # 生成XMLTV文件
-    xmltv_content = generate_xmltv(programs_dict)
+    xmltv_content = generate_xmltv(final_programs_dict)
     
     # 保存到文件
-    output_dir = 'output'
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-    
+    output_dir = CONFIG.get('output', {}).get('dir', 'output')
     today = datetime.now().strftime('%Y%m%d')
-    output_file = os.path.join(output_dir, f'epg_{today}.xml')
+    output_file = os.path.join(output_dir, f'epg_{today}')
     
-    with open(output_file, 'w', encoding='utf-8') as f:
-        f.write(xmltv_content)
+    # 保存XMLTV文件和压缩文件
+    save_xmltv(xmltv_content, output_file)
     
-    logger.info(f"EPG生成完成，保存到 {output_file}")
-    logger.info(f"共处理 {len(programs_dict)} 个频道")
+    # 清理旧文件
+    clean_old_files()
+    
+    logger.info(f"\nEPG生成完成")
+    logger.info(f"共处理 {len(final_programs_dict)} 个频道")
     
     # 统计成功抓取的节目数量
     total_programs = 0
-    for channel_id, channel_data in programs_dict.items():
+    success_channels = 0
+    for channel_id, channel_data in final_programs_dict.items():
         program_count = len(channel_data['programs'])
         total_programs += program_count
-        if program_count == 0:
+        if program_count > 0:
+            success_channels += 1
+        else:
             logger.warning(f"频道 {channel_data['name']} 未抓取到任何节目")
     
+    final_rate = calculate_success_rate(final_programs_dict, total_channels)
+    logger.info(f"最终成功率: {final_rate}%")
     logger.info(f"共抓取 {total_programs} 个节目")
+    
+    # 监控告警：如果成功率低于阈值，记录警告
+    if final_rate < success_threshold:
+        logger.warning(f"最终成功率 {final_rate}% 低于阈值 {success_threshold}%")
+    
+    logger.info("EPG生成任务完成")
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        import traceback
+        print(f"Error: {e}")
+        traceback.print_exc()

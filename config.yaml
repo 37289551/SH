@@ -1,0 +1,63 @@
+# EPGO配置文件
+
+# 源优先级配置：按优先级顺序排列，越高的优先级越先被调用
+sources:
+  - name: "tvsou"
+    enabled: true
+  - name: "tvmao"
+    enabled: true
+  - name: "cctv"
+    enabled: true
+
+# 成功率阈值配置：达到该阈值则停止后续源调用
+success_threshold: 80.0
+
+# 缓存配置
+cache:
+  enabled: true
+  # 缓存有效期，单位：小时
+  expire_hours: 24
+  # 缓存目录
+  dir: "cache"
+
+# 输出配置
+output:
+  # 输出目录
+  dir: "output"
+  # 是否生成gz压缩文件
+  gzip: true
+  # 保留最近多少天的输出文件
+  keep_days: 7
+
+# 日志配置
+logging:
+  # 日志级别：DEBUG, INFO, WARNING, ERROR, CRITICAL
+  level: "INFO"
+  # 日志格式
+  format: "%(asctime)s - %(levelname)s - %(message)s"
+  # 是否将日志写入文件
+  file_enabled: true
+  # 日志文件路径
+  file_path: "epgo.log"
+
+# 网络请求配置
+network:
+  # 请求超时时间，单位：秒
+  timeout: 15
+  # 重试次数
+  retry: 3
+  # 重试间隔，单位：秒
+  retry_delay: 2
+  # 请求头配置
+  headers:
+    User-Agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+    Referer: "https://www.tvsou.com/"
+    Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
+    Accept-Language: "zh-CN,zh;q=0.8,en-US;q=0.5,en;q=0.3"
+
+# 频道匹配配置
+channel_matching:
+  # 是否启用模糊匹配
+  fuzzy_match: true
+  # 模糊匹配阈值（0-1），值越高匹配越严格
+  fuzzy_threshold: 0.8
