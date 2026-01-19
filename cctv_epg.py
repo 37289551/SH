@@ -50,6 +50,15 @@ def make_request(url, session=None, headers=None, retry=3, delay=2):
 
 def fetch_cctv_channels():
     """获取CCTV所有频道列表"""
+    # 已知的CCTV频道列表（作为备用）
+    known_cctv_channels = [
+        "CCTV-1 综合", "CCTV-2 财经", "CCTV-3 综艺", "CCTV-4 中文国际",
+        "CCTV-5 体育", "CCTV-5+ 体育赛事", "CCTV-6 电影", "CCTV-7 国防军事",
+        "CCTV-8 电视剧", "CCTV-9 纪录", "CCTV-10 科教", "CCTV-11 戏曲",
+        "CCTV-12 社会与法", "CCTV-13 新闻", "CCTV-14 少儿", "CCTV-15 音乐",
+        "CCTV-16 奥林匹克", "CCTV-17 农业农村"
+    ]
+    
     base_url = "https://tv.cctv.com/epg/index.shtml"
     channels = []
     
@@ -57,67 +66,109 @@ def fetch_cctv_channels():
     session = requests.Session()
     response = make_request(base_url, session=session)
     
-    if not response:
-        return channels
-    
-    soup = BeautifulSoup(response.text, 'html.parser')
-    
     try:
-        # 查找频道列表，央视网频道通常在特定的导航或列表中
-        # 尝试多种可能的选择器
-        channel_selectors = [
-            '.channel-list a',
-            '.cctv-channel a',
-            'a[href*="/epg/"]',
-            'a[title*="CCTV"]',
-            '#channel-nav a'
-        ]
-        
-        found_channels = []
-        for selector in channel_selectors:
-            channel_links = soup.select(selector)
-            if channel_links:
-                found_channels = channel_links
-                logger.info(f"使用选择器 {selector} 找到 {len(channel_links)} 个频道链接")
-                break
-        
-        if not found_channels:
-            # 尝试查找所有包含CCTV的链接
-            all_links = soup.find_all('a')
-            found_channels = [link for link in all_links if 'CCTV' in link.text or '央视' in link.text]
-            logger.info(f"通过文本匹配找到 {len(found_channels)} 个CCTV频道链接")
-        
-        # 提取唯一的频道信息
-        unique_channels = {}
-        for link in found_channels:
-            channel_name = link.text.strip()
-            if not channel_name or len(channel_name) < 3:
-                continue
+        if response:
+            soup = BeautifulSoup(response.text, 'html.parser')
             
-            channel_href = link.get('href', '')
-            if not channel_href:
-                continue
+            # 查找频道列表，央视网频道通常在特定的导航或列表中
+            # 尝试多种可能的选择器
+            channel_selectors = [
+                '.channel-list a',
+                '.cctv-channel a',
+                'a[href*="/epg/"]',
+                'a[title*="CCTV"]',
+                '#channel-nav a',
+                'li > a[href*="/epg/"]',
+                '.nav a',
+                '.menu a'
+            ]
             
-            # 确保是完整URL
-            if not channel_href.startswith('http'):
-                if channel_href.startswith('/'):
-                    channel_href = f"https://tv.cctv.com{channel_href}"
-                else:
-                    channel_href = f"https://tv.cctv.com/{channel_href}"
+            found_channels = []
+            for selector in channel_selectors:
+                channel_links = soup.select(selector)
+                if channel_links:
+                    found_channels = channel_links
+                    logger.info(f"使用选择器 {selector} 找到 {len(channel_links)} 个频道链接")
+                    break
             
-            # 只保留CCTV相关频道
-            if 'CCTV' in channel_name or '央视' in channel_name:
-                unique_channels[channel_name] = channel_href
+            if not found_channels:
+                # 尝试查找所有包含CCTV的链接
+                all_links = soup.find_all('a')
+                found_channels = [link for link in all_links if 'CCTV' in link.text or '央视' in link.text]
+                logger.info(f"通过文本匹配找到 {len(found_channels)} 个CCTV频道链接")
+            
+            # 提取唯一的频道信息
+            unique_channels = {}
+            for link in found_channels:
+                channel_name = link.text.strip()
+                if not channel_name or len(channel_name) < 3:
+                    continue
+                
+                channel_href = link.get('href', '')
+                if not channel_href:
+                    continue
+                
+                # 确保是完整URL
+                if not channel_href.startswith('http'):
+                    if channel_href.startswith('/'):
+                        channel_href = f"https://tv.cctv.com{channel_href}"
+                    else:
+                        channel_href = f"https://tv.cctv.com/{channel_href}"
+                
+                # 只保留CCTV相关频道
+                if 'CCTV' in channel_name or '央视' in channel_name:
+                    unique_channels[channel_name] = channel_href
+            
+            # 转换为列表格式
+            channels = [{"name": name, "url": url} for name, url in unique_channels.items()]
+            logger.info(f"从网页共获取到 {len(channels)} 个唯一的CCTV频道")
         
-        # 转换为列表格式
-        channels = [{"name": name, "url": url} for name, url in unique_channels.items()]
-        logger.info(f"共获取到 {len(channels)} 个唯一的CCTV频道")
+        # 如果从网页获取的频道数量不足，使用已知频道列表作为补充
+        if len(channels) < 5:
+            logger.info("从网页获取的频道数量不足，使用已知频道列表作为补充")
+            # 为已知频道生成标准的EPG URL
+            for channel_name in known_cctv_channels:
+                # 检查频道是否已存在
+                channel_exists = any(channel["name"] in channel_name or channel_name in channel["name"] for channel in channels)
+                if not channel_exists:
+                    # 生成频道的EPG URL
+                    # 提取频道号，如 "CCTV-1" 或 "CCTV-5+"
+                    if "CCTV-" in channel_name:
+                        channel_code = channel_name.split()[0]
+                        # 替换 "CCTV-" 为 "epg/index_" 生成URL
+                        url_code = channel_code.replace("CCTV-", "epg/index_")
+                        # 处理CCTV-5+的特殊情况
+                        url_code = url_code.replace("5+", "5p")
+                        channel_url = f"https://tv.cctv.com/{url_code}.shtml"
+                        channels.append({"name": channel_name, "url": channel_url})
+        
+        # 去重
+        unique_channels_dict = {}
+        for channel in channels:
+            # 使用标准化名称作为键去重
+            standard_name = normalize_channel_name(channel["name"])
+            if standard_name not in unique_channels_dict:
+                unique_channels_dict[standard_name] = channel
+        
+        # 转换回列表
+        channels = list(unique_channels_dict.values())
+        logger.info(f"最终获取到 {len(channels)} 个唯一的CCTV频道")
         
         # 排序频道，便于后续处理
         channels.sort(key=lambda x: x["name"])
         
     except Exception as e:
         logger.error(f"解析CCTV频道列表失败: {e}", exc_info=True)
+        # 如果解析失败，直接使用已知频道列表
+        logger.info("解析失败，直接使用已知频道列表")
+        channels = []
+        for channel_name in known_cctv_channels:
+            if "CCTV-" in channel_name:
+                channel_code = channel_name.split()[0]
+                url_code = channel_code.replace("CCTV-", "epg/index_")
+                url_code = url_code.replace("5+", "5p")
+                channel_url = f"https://tv.cctv.com/{url_code}.shtml"
+                channels.append({"name": channel_name, "url": channel_url})
     
     return channels, session
 
