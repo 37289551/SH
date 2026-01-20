@@ -230,12 +230,20 @@ def fetch_program_items(soup):
     
     return programs
 
-def fetch_tvmao_programs(channel_type, weekday=None):
+def fetch_tvmao_programs(channel_type=None, weekday=None):
     """抓取tvmao.com的节目单"""
     programs_dict = {}
     
     # 生成所有需要抓取的URL
-    urls = generate_urls(channel_type, weekday)
+    # 如果没有指定channel_type，抓取所有类型
+    if channel_type:
+        urls = generate_urls(channel_type, weekday)
+    else:
+        urls = []
+        # 抓取所有类型：cctv和satellite
+        urls.extend(generate_urls('cctv', weekday))
+        urls.extend(generate_urls('satellite', weekday))
+    
     if not urls:
         return programs_dict
     
