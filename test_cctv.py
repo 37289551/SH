@@ -16,7 +16,7 @@ import tempfile
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 # 导入新的CCTV API模块
-from cctv_epg import get_cctv_epg, generate_xmltv, CCTV_CHANNELS, validate_date
+from cctv_api_epg import get_cctv_epg, generate_xmltv, CCTV_CHANNELS, validate_date
 
 def test_api_call(channel_id, date_str):
     """测试API调用功能"""
@@ -56,8 +56,8 @@ def test_xmltv_generation(programs_dict, date_str):
     print(f"\n=== 测试XMLTV生成 ===")
     try:
         # 生成XMLTV内容
-        import pytz
-        beijing_tz = pytz.timezone('Asia/Shanghai')
+        from datetime import timezone, timedelta
+        beijing_tz = timezone(timedelta(hours=8))
         xmltv_content = generate_xmltv(programs_dict, date_str, beijing_tz)
         
         if xmltv_content:
@@ -191,8 +191,8 @@ def main():
         if full_programs_dict:
             # 生成完整XMLTV文件
             print(f"\n=== 生成完整XMLTV文件 ===")
-            import pytz
-            beijing_tz = pytz.timezone('Asia/Shanghai')
+            from datetime import timezone, timedelta
+            beijing_tz = timezone(timedelta(hours=8))
             full_xmltv = generate_xmltv(full_programs_dict, date_str, beijing_tz)
             
             output_dir = 'output'
