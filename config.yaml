@@ -3,7 +3,7 @@
 # 源优先级配置：按优先级顺序排列，越高的优先级越先被调用
 sources:
   - name: "tvsou"
-    enabled: true
+    enabled: false
   - name: "tvmao"
     enabled: true
   - name: "cctv"
@@ -27,7 +27,7 @@ output:
   # 是否生成gz压缩文件
   gzip: true
   # 保留最近多少天的输出文件
-  keep_days: 7
+  keep_days: 2
 
 # 日志配置
 logging:
