@@ -48,10 +48,10 @@ jobs:
         git config --global user.name "github-actions[bot]"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
         
-        # 检查是否有输出文件
-        if [ -n "$(ls -A output/)" ]; then
-          # 添加所有输出文件
-          git add output/*
+        # 检查epg.gz文件是否存在
+        if [ -f "output/epg.gz" ]; then
+          # 只添加epg.gz文件，使用-f选项强制添加（忽略.gitignore）
+          git add -f output/epg.gz
           
           # 检查是否有更改
           if git diff --cached --quiet; then
@@ -66,4 +66,3 @@ jobs:
         else
           echo "没有生成EPG文件"
         fi
-
