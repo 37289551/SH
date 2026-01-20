@@ -183,9 +183,44 @@ def main():
 
 def fetch_cctv_programs():
     """获取所有CCTV频道的节目单（兼容epgo.py的调用格式）"""
-    # 当前CCTV API已经失效，返回空字典
-    logger.error("CCTV API已失效，无法获取节目单")
-    return {}
+    from datetime import timezone, timedelta
+    
+    # 设置北京时区 (UTC+8)
+    beijing_tz = timezone(timedelta(hours=8))
+    
+    # 获取当前北京日期，格式为YYYYMMDD
+    target_date = datetime.now(beijing_tz).strftime('%Y%m%d')
+    
+    programs_dict = {}
+    
+    # 遍历所有CCTV频道
+    for channel_id, channel_name in CCTV_CHANNELS.items():
+        logger.info(f"获取{channel_name}的节目单...")
+        epg_data = get_cctv_epg(channel_id, target_date)
+        
+        if epg_data and 'data' in epg_data:
+            # 提取节目列表
+            for key, channel_data in epg_data['data'].items():
+                if 'list' in channel_data:
+                    # 转换节目格式为epgo.py所需的格式
+                    formatted_programs = []
+                    for program in channel_data['list']:
+                        # 格式转换：将时间戳转换为HH:MM格式
+                        start_time = datetime.fromtimestamp(program['startTime'], beijing_tz).strftime('%H:%M')
+                        formatted_programs.append({
+                            'time': start_time,
+                            'title': program['title']
+                        })
+                    
+                    # 使用频道名称作为key，与其他源保持一致
+                    programs_dict[channel_name] = formatted_programs
+                    break
+        
+        # 添加适当延迟，避免请求过快
+        time.sleep(0.5)
+    
+    logger.info(f"CCTV API成功获取到 {len(programs_dict)} 个频道的节目单")
+    return programs_dict
 
 if __name__ == "__main__":
     main()
