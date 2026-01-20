@@ -32,21 +32,7 @@ jobs:
     - name: 生成EPG节目单
       run: python epgo.py
     
-    # 5. 上传生成的节目单文件
-    - name: 上传EPG输出文件
-      uses: actions/upload-artifact@v4
-      with:
-        name: epg-files
-        path: output/
-        retention-days: 7
-    
-    # 6. 清理旧的输出文件
-    - name: 清理旧文件
-      run: |
-        # 删除7天前的输出文件
-        find output/ -name "*.xml" -o -name "*.xml.gz" | xargs -r rm -f
-    
-    # 7. 记录运行结果
+    # 5. 记录运行结果
     - name: 记录运行结果
       run: |
         echo "EPG生成任务完成"
@@ -54,3 +40,30 @@ jobs:
         ls -la
         echo "输出目录内容："
         ls -la output/
+    
+    # 6. 提交生成的节目单到仓库
+    - name: 提交EPG文件到仓库
+      run: |
+        # 配置git用户信息
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        
+        # 检查是否有输出文件
+        if [ -n "$(ls -A output/)" ]; then
+          # 添加所有输出文件
+          git add output/*
+          
+          # 检查是否有更改
+          if git diff --cached --quiet; then
+            echo "没有新的EPG文件需要提交"
+          else
+            # 提交更改
+            git commit -m "自动生成EPG节目单 $(date +'%Y-%m-%d')"
+            # 推送更改到仓库
+            git push
+            echo "EPG文件已成功提交到仓库"
+          fi
+        else
+          echo "没有生成EPG文件"
+        fi
+
