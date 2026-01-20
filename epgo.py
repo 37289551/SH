@@ -118,22 +118,39 @@ def generate_xmltv(programs_dict):
         display_name = ET.SubElement(channel, 'display-name')
         display_name.text = channel_name
         
-        # 添加频道节目
-        for program in channel_programs:
+        # 对节目按时间排序，确保顺序正确
+        channel_programs.sort(key=lambda x: x['time'])
+        
+        # 添加频道节目，计算正确的结束时间
+        for i, program in enumerate(channel_programs):
             # 创建节目元素
             programme = ET.SubElement(tv, 'programme')
             programme.set('channel', channel_id)
             
-            # 构建开始和结束时间
-            start_time = f"{today}{program['time'].replace(':', '')}00"
+            # 解析当前节目的开始时间
+            start_time_str = program['time']
+            start_hour, start_minute = map(int, start_time_str.split(':'))
+            start_datetime = datetime.strptime(f"{today} {start_time_str}", "%Y%m%d %H:%M")
             
-            # 简单处理：假设每个节目持续30分钟
-            end_hour = int(program['time'].split(':')[0])
-            end_minute = int(program['time'].split(':')[1]) + 30
-            if end_minute >= 60:
-                end_hour += 1
-                end_minute -= 60
-            end_time = f"{today}{end_hour:02d}{end_minute:02d}00"
+            # 计算结束时间：
+            # 如果是最后一个节目，默认持续到明天的00:00:00
+            # 否则，下一节目的开始时间减1秒作为当前节目的结束时间
+            if i == len(channel_programs) - 1:
+                # 最后一个节目，默认持续到明天00:00:00
+                end_datetime = start_datetime.replace(hour=23, minute=59, second=59)
+            else:
+                # 解析下一节目的开始时间
+                next_program = channel_programs[i + 1]
+                next_start_time_str = next_program['time']
+                next_hour, next_minute = map(int, next_start_time_str.split(':'))
+                next_start_datetime = datetime.strptime(f"{today} {next_start_time_str}", "%Y%m%d %H:%M")
+                
+                # 下一节目的开始时间减1秒作为当前节目的结束时间
+                end_datetime = next_start_datetime - timedelta(seconds=1)
+            
+            # 格式化时间为XMLTV要求的格式：YYYYMMDDHHMMSS
+            start_time = start_datetime.strftime("%Y%m%d%H%M") + "00"
+            end_time = end_datetime.strftime("%Y%m%d%H%M") + "00"
             
             programme.set('start', start_time)
             programme.set('stop', end_time)
@@ -480,3 +497,4 @@ if __name__ == "__main__":
         import traceback
         print(f"Error: {e}")
         traceback.print_exc()
+
