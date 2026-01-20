@@ -85,18 +85,6 @@ try:
 except ImportError as e:
     logger.error(f"导入cctv_epg模块失败: {e}")
 
-
-
-
-
-
-
-
-
-
-
-
-
 def generate_xmltv(programs_dict):
     """生成XMLTV格式的EPG文件"""
     today = datetime.now().strftime('%Y%m%d')
@@ -497,4 +485,5 @@ if __name__ == "__main__":
         import traceback
         print(f"Error: {e}")
         traceback.print_exc()
+
 
