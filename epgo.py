@@ -209,7 +209,7 @@ def merge_programs(existing_programs, new_programs):
 
 def save_xmltv(xmltv_content, output_file):
     """
-    保存XMLTV文件，并根据配置生成gz压缩文件
+    保存XMLTV文件，只生成固定名称的gz压缩文件
     
     Args:
         xmltv_content: XMLTV内容
@@ -221,19 +221,15 @@ def save_xmltv(xmltv_content, output_file):
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     
-    # 保存未压缩的XMLTV文件
-    xml_file = f"{output_file}.xml"
-    with open(xml_file, 'w', encoding='utf-8') as f:
-        f.write(xmltv_content)
-    logger.info(f"保存XMLTV文件: {xml_file}")
+    # 生成固定名称的gz文件，覆盖原有文件
+    gz_file = os.path.join(output_dir, "epg.gz")
     
-    # 保存gz压缩文件
-    if CONFIG.get('output', {}).get('gzip', True):
-        gz_file = f"{output_file}.gz"
-        with open(xml_file, 'rb') as f_in:
-            with gzip.open(gz_file, 'wb') as f_out:
-                shutil.copyfileobj(f_in, f_out)
-        logger.info(f"保存压缩XMLTV文件: {gz_file}")
+    # 直接将XML内容写入gz文件，不生成中间xml文件
+    xml_bytes = xmltv_content.encode('utf-8')
+    with gzip.open(gz_file, 'wb') as f_out:
+        f_out.write(xml_bytes)
+    
+    logger.info(f"保存固定名称压缩XMLTV文件: {gz_file}")
 
 def clean_old_files():
     """
@@ -407,16 +403,14 @@ def main():
     # 生成XMLTV文件
     xmltv_content = generate_xmltv(final_programs_dict)
     
-    # 保存到文件
+    # 保存到文件 - 使用固定名称，不包含日期
     output_dir = CONFIG.get('output', {}).get('dir', 'output')
-    today = datetime.now().strftime('%Y%m%d')
-    output_file = os.path.join(output_dir, f'{today}')
+    output_file = os.path.join(output_dir, 'temp')  # 临时文件名，实际会被覆盖为epg.gz
     
-    # 保存XMLTV文件和压缩文件
+    # 保存XMLTV文件，只生成epg.gz
     save_xmltv(xmltv_content, output_file)
     
-    # 清理旧文件
-    clean_old_files()
+    # 无需清理旧文件，因为每次都会覆盖epg.gz
     
     logger.info(f"\nEPG生成完成")
     logger.info(f"共处理 {len(final_programs_dict)} 个频道")
