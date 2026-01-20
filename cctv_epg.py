@@ -1,13 +1,12 @@
 import requests
 from bs4 import BeautifulSoup
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import os
 import time
 import re
 import json
 import argparse
-import pytz
 
 # 配置日志
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -127,7 +126,7 @@ def main():
     args = parser.parse_args()
     
     # 设置北京时区 (UTC+8)
-    beijing_tz = pytz.timezone('Asia/Shanghai')
+    beijing_tz = timezone(timedelta(hours=8))
     
     # 获取当前北京时间
     now_beijing = datetime.now(beijing_tz)
