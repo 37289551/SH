@@ -359,12 +359,13 @@ def main():
                 source_programs = source_func()
             elif source_name == 'tvmao':
                 # 分阶段抓取：先抓取非CCTV频道，再补充CCTV频道
-                # 1. 先抓取所有频道
-                source_programs = source_func()
+                # 1. 先抓取非CCTV频道
+                logger.info("TVMao源第一阶段，抓取非CCTV频道")
+                satellite_programs = source_func('satellite')
                 
-                # 2. 第一阶段：只处理非CCTV频道
+                # 2. 处理非CCTV频道
                 filtered_programs = {}
-                for channel_name, programs in source_programs.items():
+                for channel_name, programs in satellite_programs.items():
                     if not (channel_name.startswith('CCTV') or channel_name.startswith('央视')):
                         filtered_programs[channel_name] = programs
                 
@@ -379,9 +380,13 @@ def main():
                         cctv_channels_need_supplement.append(channel_id)
                 
                 if cctv_channels_need_supplement:
-                    logger.info(f"TVMao源第二阶段，尝试补充 {len(cctv_channels_need_supplement)} 个CCTV频道")
+                    logger.info(f"TVMao源第二阶段，抓取需要补充的CCTV频道")
+                    # 只抓取CCTV频道来补充
+                    cctv_programs = source_func('cctv')
+                    
+                    logger.info(f"TVMao源第二阶段，处理 {len(cctv_programs)} 个CCTV频道")
                     # 查找TVMao源中对应的CCTV频道
-                    for channel_name, programs in source_programs.items():
+                    for channel_name, programs in cctv_programs.items():
                         if (channel_name.startswith('CCTV') or channel_name.startswith('央视')):
                             matched_channel = match_channel(channel_name)
                             if matched_channel in cctv_channels_need_supplement:
