@@ -2,12 +2,12 @@
 
 # 源优先级配置：按优先级顺序排列，越高的优先级越先被调用
 sources:
-  - name: "tvsou"
-    enabled: false
-  - name: "tvmao"
-    enabled: true
   - name: "cctv"
     enabled: true
+  - name: "tvmao"
+    enabled: true
+  - name: "tvsou"
+    enabled: false
 
 # 成功率阈值配置：达到该阈值则停止后续源调用
 success_threshold: 80.0
@@ -27,7 +27,7 @@ output:
   # 是否生成gz压缩文件
   gzip: true
   # 保留最近多少天的输出文件
-  keep_days: 2
+  keep_days: 7
 
 # 日志配置
 logging:
