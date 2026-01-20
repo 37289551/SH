@@ -358,16 +358,37 @@ def main():
                 # CCTV源只抓取CCTV频道
                 source_programs = source_func()
             elif source_name == 'tvmao':
-                # TVMao源只抓取卫视频道（不包含CCTV）
-                # 先抓取所有频道，然后过滤掉CCTV频道
+                # 分阶段抓取：先抓取非CCTV频道，再补充CCTV频道
+                # 1. 先抓取所有频道
                 source_programs = source_func()
-                # 过滤掉CCTV频道
+                
+                # 2. 第一阶段：只处理非CCTV频道
                 filtered_programs = {}
                 for channel_name, programs in source_programs.items():
                     if not (channel_name.startswith('CCTV') or channel_name.startswith('央视')):
                         filtered_programs[channel_name] = programs
+                
+                logger.info(f"TVMao源第一阶段，处理 {len(filtered_programs)} 个非CCTV频道")
+                
+                # 3. 第二阶段：补充处理CCTV频道中没有节目单的频道
+                # 查找需要补充的CCTV频道
+                cctv_channels_need_supplement = []
+                for channel_id, channel_data in final_programs_dict.items():
+                    # 检查是否是CCTV频道且没有节目
+                    if (channel_data['name'].startswith('CCTV') or channel_data['name'].startswith('央视')) and len(channel_data['programs']) == 0:
+                        cctv_channels_need_supplement.append(channel_id)
+                
+                if cctv_channels_need_supplement:
+                    logger.info(f"TVMao源第二阶段，尝试补充 {len(cctv_channels_need_supplement)} 个CCTV频道")
+                    # 查找TVMao源中对应的CCTV频道
+                    for channel_name, programs in source_programs.items():
+                        if (channel_name.startswith('CCTV') or channel_name.startswith('央视')):
+                            matched_channel = match_channel(channel_name)
+                            if matched_channel in cctv_channels_need_supplement:
+                                filtered_programs[channel_name] = programs
+                                logger.info(f"  补充 {channel_name} 的节目单")
+                
                 source_programs = filtered_programs
-                logger.info(f"TVMao源过滤后，保留 {len(source_programs)} 个非CCTV频道")
             else:
                 # 其他源正常调用
                 source_programs = source_func()
