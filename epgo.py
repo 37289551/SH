@@ -353,8 +353,24 @@ def main():
         
         # 调用源的抓取函数
         try:
-            # 调用源函数
-            source_programs = source_func()
+            # 根据源类型调用不同的抓取策略
+            if source_name == 'cctv':
+                # CCTV源只抓取CCTV频道
+                source_programs = source_func()
+            elif source_name == 'tvmao':
+                # TVMao源只抓取卫视频道（不包含CCTV）
+                # 先抓取所有频道，然后过滤掉CCTV频道
+                source_programs = source_func()
+                # 过滤掉CCTV频道
+                filtered_programs = {}
+                for channel_name, programs in source_programs.items():
+                    if not (channel_name.startswith('CCTV') or channel_name.startswith('央视')):
+                        filtered_programs[channel_name] = programs
+                source_programs = filtered_programs
+                logger.info(f"TVMao源过滤后，保留 {len(source_programs)} 个非CCTV频道")
+            else:
+                # 其他源正常调用
+                source_programs = source_func()
             
             logger.info(f"{source_name} 源抓取完成，获取到 {len(source_programs)} 个频道的节目单")
             
