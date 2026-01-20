@@ -313,8 +313,14 @@ def main():
     total_channels = len(CHANNELS)
     logger.info(f"总共有 {total_channels} 个频道需要抓取")
     
-    # 初始化结果字典
+    # 初始化结果字典，包含所有配置频道
     final_programs_dict = {}
+    # 预先添加所有配置频道，确保成功率计算基于所有频道
+    for channel_id, channel_info in CHANNELS.items():
+        final_programs_dict[channel_id] = {
+            'name': channel_info['name'],
+            'programs': []
+        }
     
     # 从配置文件读取源优先级
     sources_config = CONFIG.get('sources', [])
@@ -376,9 +382,6 @@ def main():
                         final_programs_dict[channel_id]['programs'],
                         channel_data['programs']
                     )
-                else:
-                    # 如果频道不存在，直接添加
-                    final_programs_dict[channel_id] = channel_data
             
             # 计算当前成功率
             current_rate = calculate_success_rate(final_programs_dict, total_channels)
@@ -391,14 +394,6 @@ def main():
             
         except Exception as e:
             logger.error(f"使用 {source_name} 源抓取节目单失败: {e}", exc_info=True)
-    
-    # 确保所有频道都在结果中
-    for channel_id, channel_info in CHANNELS.items():
-        if channel_id not in final_programs_dict:
-            final_programs_dict[channel_id] = {
-                'name': channel_info['name'],
-                'programs': []
-            }
     
     # 生成XMLTV文件
     xmltv_content = generate_xmltv(final_programs_dict)
