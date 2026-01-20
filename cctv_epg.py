@@ -181,5 +181,11 @@ def main():
     else:
         logger.warning("未提取到任何CCTV节目单")
 
+def fetch_cctv_programs():
+    """获取所有CCTV频道的节目单（兼容epgo.py的调用格式）"""
+    # 当前CCTV API已经失效，返回空字典
+    logger.error("CCTV API已失效，无法获取节目单")
+    return {}
+
 if __name__ == "__main__":
     main()
