@@ -1,15 +1,16 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+CCTV API节目单抓取模块
+提供与test_cctv.py兼容的函数接口
+"""
+
 import requests
-from bs4 import BeautifulSoup
 import logging
-from datetime import datetime, timedelta, timezone
-import os
-import time
-import re
 import json
-import argparse
+from datetime import datetime, timezone, timedelta
 
 # 配置日志
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 # 频道名称映射
@@ -34,8 +35,33 @@ CCTV_CHANNELS = {
     'cctv17': 'CCTV-17 农业农村'
 }
 
+def validate_date(date_str):
+    """
+    验证日期格式是否为YYYYMMDD
+    
+    Args:
+        date_str: 要验证的日期字符串
+        
+    Returns:
+        bool: 如果格式正确返回True，否则返回False
+    """
+    try:
+        datetime.strptime(date_str, '%Y%m%d')
+        return True
+    except ValueError:
+        return False
+
 def get_cctv_epg(channel_id, date_str):
-    """通过CCTV API获取节目单数据"""
+    """
+    通过CCTV API获取节目单数据
+    
+    Args:
+        channel_id: 频道ID，如'cctv1'
+        date_str: 日期字符串，格式为YYYYMMDD
+        
+    Returns:
+        dict: 包含节目单数据的字典，如果获取失败或返回错误码返回None
+    """
     # API URL模板
     api_url = f"https://api.cntv.cn/epg/getEpgInfoByChannelNew?c={channel_id}&serviceId=tvcctv&d={date_str}&t=jsonp&cb=callback"
     
@@ -49,14 +75,35 @@ def get_cctv_epg(channel_id, date_str):
         json_text = jsonp_text[jsonp_text.index('(') + 1:jsonp_text.rindex(')')]
         data = json.loads(json_text)
         
-        logger.info(f"成功获取{channel_id}的节目单数据")
+        logger.info(f"获取{channel_id}的节目单数据成功，返回数据结构: {list(data.keys())}")
+        
+        # 检查是否返回了错误码
+        if 'errcode' in data:
+            logger.warning(f"CCTV API返回错误码: {data['errcode']}, 错误信息: {data.get('msg', '无')}")
+            return None
+        
+        # 检查是否包含data字段
+        if 'data' not in data:
+            logger.warning(f"CCTV API返回的数据中没有包含data字段: {data}")
+            return None
+        
         return data
     except Exception as e:
         logger.error(f"获取CCTV节目单失败: {e}")
         return None
 
 def generate_xmltv(programs_dict, target_date, timezone):
-    """生成XMLTV格式的EPG文件"""
+    """
+    生成XMLTV格式的EPG文件
+    
+    Args:
+        programs_dict: 节目单字典，格式为{channel_id: [program1, program2, ...]}
+        target_date: 目标日期，格式为YYYYMMDD
+        timezone: 时区对象
+        
+    Returns:
+        str: XMLTV格式的字符串
+    """
     # 创建XML内容
     xml_content = f'''<?xml version="1.0" encoding="UTF-8"?>
 <tv generator-info-name="CCTV API EPG Generator" generator-info-url="https://tv.cctv.com/">
@@ -107,79 +154,3 @@ def generate_xmltv(programs_dict, target_date, timezone):
 '''
     
     return xml_content
-
-def validate_date(date_str):
-    """验证日期格式是否为YYYYMMDD"""
-    try:
-        datetime.strptime(date_str, '%Y%m%d')
-        return True
-    except ValueError:
-        return False
-
-def main():
-    """主函数"""
-    logger.info("开始从CCTV API提取节目单...")
-    
-    # 创建参数解析器
-    parser = argparse.ArgumentParser(description='获取CCTV节目单并生成XMLTV格式')
-    parser.add_argument('--date', type=str, help='指定日期，格式为YYYYMMDD，如20260120')
-    args = parser.parse_args()
-    
-    # 设置北京时区 (UTC+8)
-    beijing_tz = timezone(timedelta(hours=8))
-    
-    # 获取当前北京时间
-    now_beijing = datetime.now(beijing_tz)
-    
-    # 处理日期参数
-    if args.date:
-        if validate_date(args.date):
-            target_date = args.date
-            logger.info(f"使用指定日期: {target_date}")
-        else:
-            logger.error(f"日期格式错误: {args.date}，应为YYYYMMDD格式")
-            return
-    else:
-        # 使用当前北京日期，格式为YYYYMMDD
-        target_date = now_beijing.strftime('%Y%m%d')
-        logger.info(f"使用当前日期: {target_date}")
-    
-    programs_dict = {}
-    
-    # 遍历所有CCTV频道
-    for channel_id, channel_name in CCTV_CHANNELS.items():
-        logger.info(f"获取{channel_name}的节目单...")
-        epg_data = get_cctv_epg(channel_id, target_date)
-        
-        if epg_data and 'data' in epg_data:
-            # 提取节目列表
-            for key, channel_data in epg_data['data'].items():
-                if 'list' in channel_data:
-                    programs_dict[channel_id] = channel_data['list']
-                    break
-        
-        # 添加适当延迟，避免请求过快
-        time.sleep(1)
-    
-    logger.info(f"共获取到 {len(programs_dict)} 个频道的节目单")
-    
-    if programs_dict:
-        # 生成XMLTV文件
-        xmltv_content = generate_xmltv(programs_dict, target_date, beijing_tz)
-        
-        # 保存到文件
-        output_dir = 'output'
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir)
-        
-        output_file = os.path.join(output_dir, f'cctv_epg_{target_date}.xml')
-        
-        with open(output_file, 'w', encoding='utf-8') as f:
-            f.write(xmltv_content)
-        
-        logger.info(f"CCTV节目单已保存到 {output_file}")
-    else:
-        logger.warning("未提取到任何CCTV节目单")
-
-if __name__ == "__main__":
-    main()

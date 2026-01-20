@@ -8,8 +8,7 @@ import re
 import json
 import argparse
 
-# 配置日志
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+# 使用根日志配置，确保日志能正确输出到主日志文件
 logger = logging.getLogger(__name__)
 
 # 频道名称映射
@@ -181,6 +180,10 @@ def main():
     else:
         logger.warning("未提取到任何CCTV节目单")
 
+# 导入新的CCTV API模块
+from cctv_api_epg import get_cctv_epg as api_get_cctv_epg
+from cctv_api_epg import CCTV_CHANNELS as API_CCTV_CHANNELS
+
 def fetch_cctv_programs():
     """获取所有CCTV频道的节目单（兼容epgo.py的调用格式）"""
     from datetime import timezone, timedelta
@@ -192,11 +195,13 @@ def fetch_cctv_programs():
     target_date = datetime.now(beijing_tz).strftime('%Y%m%d')
     
     programs_dict = {}
+    success_count = 0
+    fail_count = 0
     
     # 遍历所有CCTV频道
-    for channel_id, channel_name in CCTV_CHANNELS.items():
+    for channel_id, channel_name in API_CCTV_CHANNELS.items():
         logger.info(f"获取{channel_name}的节目单...")
-        epg_data = get_cctv_epg(channel_id, target_date)
+        epg_data = api_get_cctv_epg(channel_id, target_date)
         
         if epg_data and 'data' in epg_data:
             # 提取节目列表
@@ -214,12 +219,17 @@ def fetch_cctv_programs():
                     
                     # 使用频道名称作为key，与其他源保持一致
                     programs_dict[channel_name] = formatted_programs
+                    success_count += 1
+                    logger.info(f"成功获取到{channel_name}的节目单，共{len(formatted_programs)}个节目")
                     break
+        else:
+            fail_count += 1
+            logger.warning(f"未能获取到{channel_name}的节目单")
         
         # 添加适当延迟，避免请求过快
         time.sleep(0.5)
     
-    logger.info(f"CCTV API成功获取到 {len(programs_dict)} 个频道的节目单")
+    logger.info(f"CCTV API抓取完成，成功获取到 {success_count} 个频道的节目单，{fail_count} 个频道失败")
     return programs_dict
 
 if __name__ == "__main__":
