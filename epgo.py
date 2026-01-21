@@ -9,20 +9,8 @@ import gzip
 import shutil
 import difflib
 
-# 默认配置文件路径
 DEFAULT_CONFIG_PATH = "config.yaml"
-
-# 读取配置文件
 def load_config(config_path=DEFAULT_CONFIG_PATH):
-    """
-    读取配置文件
-    
-    Args:
-        config_path: 配置文件路径
-        
-    Returns:
-        dict: 配置字典
-    """
     try:
         with open(config_path, 'r', encoding='utf-8') as f:
             config = yaml.safe_load(f)
@@ -34,16 +22,13 @@ def load_config(config_path=DEFAULT_CONFIG_PATH):
         logger.error(f"解析配置文件失败: {e}")
         return {}
 
-# 加载配置
 CONFIG = load_config()
 
-# 配置日志
 log_level = CONFIG.get('logging', {}).get('level', 'INFO').upper()
 log_format = CONFIG.get('logging', {}).get('format', '%(asctime)s - %(levelname)s - %(message)s')
 logging.basicConfig(level=getattr(logging, log_level), format=log_format)
 logger = logging.getLogger(__name__)
 
-# 添加文件日志
 if CONFIG.get('logging', {}).get('file_enabled', True):
     log_file = CONFIG.get('logging', {}).get('file_path', 'epgo.log')
     file_handler = logging.FileHandler(log_file, encoding='utf-8')
@@ -51,13 +36,10 @@ if CONFIG.get('logging', {}).get('file_enabled', True):
     file_handler.setFormatter(logging.Formatter(log_format))
     logger.addHandler(file_handler)
 
-# 导入频道配置
 from channels import CHANNELS
 
-# 导入频道名称映射函数
 from channel_mapping import normalize_channel_name
 
-# 导入各个网站的节目单抓取函数
 source_functions = {
     'tvsou': None,
     'tvmao': None,
@@ -88,8 +70,7 @@ except ImportError as e:
 def generate_xmltv(programs_dict):
     """生成XMLTV格式的EPG文件"""
     today = datetime.now().strftime('%Y%m%d')
-    
-    # 创建根元素
+
     tv = ET.Element('tv')
     tv.set('generator-info-name', 'EPGO Generator')
     tv.set('generator-info-url', 'https://github.com/yourusername/epgo')
@@ -97,58 +78,40 @@ def generate_xmltv(programs_dict):
     for channel_id, channel_data in programs_dict.items():
         channel_name = channel_data['name']
         channel_programs = channel_data['programs']
-        
-        # 创建频道元素
+
         channel = ET.SubElement(tv, 'channel')
         channel.set('id', channel_id)
-        
-        # 添加频道名称
+
         display_name = ET.SubElement(channel, 'display-name')
         display_name.text = channel_name
-        
-        # 对节目按时间排序，确保顺序正确
+
         channel_programs.sort(key=lambda x: x['time'])
-        
-        # 添加频道节目，计算正确的结束时间
+
         for i, program in enumerate(channel_programs):
-            # 创建节目元素
             programme = ET.SubElement(tv, 'programme')
             programme.set('channel', channel_id)
-            
-            # 解析当前节目的开始时间
             start_time_str = program['time']
             start_hour, start_minute = map(int, start_time_str.split(':'))
             start_datetime = datetime.strptime(f"{today} {start_time_str}", "%Y%m%d %H:%M")
-            
-            # 计算结束时间：
-            # 如果是最后一个节目，默认持续到明天的00:00:00
-            # 否则，下一节目的开始时间减1秒作为当前节目的结束时间
             if i == len(channel_programs) - 1:
-                # 最后一个节目，默认持续到明天00:00:00
                 end_datetime = start_datetime.replace(hour=23, minute=59, second=59)
             else:
-                # 解析下一节目的开始时间
                 next_program = channel_programs[i + 1]
                 next_start_time_str = next_program['time']
                 next_hour, next_minute = map(int, next_start_time_str.split(':'))
                 next_start_datetime = datetime.strptime(f"{today} {next_start_time_str}", "%Y%m%d %H:%M")
-                
-                # 下一节目的开始时间减1秒作为当前节目的结束时间
                 end_datetime = next_start_datetime - timedelta(seconds=1)
-            
-            # 格式化时间为XMLTV要求的格式：YYYYMMDDHHMMSS
+
             start_time = start_datetime.strftime("%Y%m%d%H%M") + "00"
             end_time = end_datetime.strftime("%Y%m%d%H%M") + "00"
             
             programme.set('start', start_time)
             programme.set('stop', end_time)
-            
-            # 添加节目标题
+
             title = ET.SubElement(programme, 'title')
             title.set('lang', 'zh')
             title.text = program['title']
     
-    # 生成XML字符串
     rough_string = ET.tostring(tv, 'utf-8')
     reparsed = minidom.parseString(rough_string)
     pretty_xml = reparsed.toprettyxml(indent="  ")
@@ -156,20 +119,10 @@ def generate_xmltv(programs_dict):
     return pretty_xml
 
 def calculate_success_rate(programs_dict, total_channels):
-    """
-    计算节目单抓取成功率
-    
-    Args:
-        programs_dict: 节目单字典
-        total_channels: 总频道数
-        
-    Returns:
-        float: 成功率（0-100）
-    """
+
     if total_channels == 0:
         return 0.0
     
-    # 统计成功获取节目单的频道数量
     success_count = 0
     for channel_id, channel_data in programs_dict.items():
         if len(channel_data['programs']) > 0:
@@ -179,26 +132,13 @@ def calculate_success_rate(programs_dict, total_channels):
     return round(success_rate, 2)
 
 def merge_programs(existing_programs, new_programs):
-    """
-    合并节目单数据
-    
-    Args:
-        existing_programs: 已有的节目单
-        new_programs: 新的节目单
-        
-    Returns:
-        list: 合并后的节目单
-    """
+
     if not existing_programs:
         return new_programs
     
     if not new_programs:
         return existing_programs
-    
-    # 合并节目单，去重
     merged = existing_programs.copy()
-    
-    # 创建已存在节目的集合，用于去重
     existing_set = {(prog['time'], prog['title']) for prog in merged}
     
     for prog in new_programs:
@@ -206,30 +146,17 @@ def merge_programs(existing_programs, new_programs):
         if prog_key not in existing_set:
             merged.append(prog)
             existing_set.add(prog_key)
-    
-    # 按时间排序
-    merged.sort(key=lambda x: x['time'])
-    
-    return merged
 
+    merged.sort(key=lambda x: x['time'])
+    return merged
 def save_xmltv(xmltv_content, output_file):
-    """
-    保存XMLTV文件，只生成固定名称的gz压缩文件
-    
-    Args:
-        xmltv_content: XMLTV内容
-        output_file: 输出文件路径（不包含扩展名）
-    """
     output_dir = CONFIG.get('output', {}).get('dir', 'output')
-    
-    # 确保输出目录存在
+
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
-    
-    # 生成固定名称的gz文件，覆盖原有文件
+
     gz_file = os.path.join(output_dir, "epg.gz")
-    
-    # 直接将XML内容写入gz文件，不生成中间xml文件
+
     xml_bytes = xmltv_content.encode('utf-8')
     with gzip.open(gz_file, 'wb') as f_out:
         f_out.write(xml_bytes)
@@ -237,9 +164,6 @@ def save_xmltv(xmltv_content, output_file):
     logger.info(f"保存固定名称压缩XMLTV文件: {gz_file}")
 
 def clean_old_files():
-    """
-    清理旧的输出文件，保留最近N天的文件
-    """
     output_dir = CONFIG.get('output', {}).get('dir', 'output')
     keep_days = CONFIG.get('output', {}).get('keep_days', 7)
     
@@ -248,8 +172,7 @@ def clean_old_files():
     
     current_time = time.time()
     cutoff_time = current_time - (keep_days * 24 * 3600)
-    
-    # 获取所有输出文件
+
     files = []
     for filename in os.listdir(output_dir):
         file_path = os.path.join(output_dir, filename)
@@ -257,8 +180,7 @@ def clean_old_files():
             # 只处理XML和GZ文件
             if filename.endswith('.xml') or filename.endswith('.xml.gz') or filename.endswith('.gz'):
                 files.append((file_path, os.path.getmtime(file_path)))
-    
-    # 清理过期文件
+
     deleted_count = 0
     for file_path, mtime in files:
         if mtime < cutoff_time:
@@ -270,25 +192,11 @@ def clean_old_files():
         logger.info(f"共删除 {deleted_count} 个过期文件")
 
 def match_channel(channel_name):
-    """
-    优化的频道匹配算法，支持模糊匹配
-    
-    Args:
-        channel_name: 要匹配的频道名称
-        
-    Returns:
-        str: 匹配到的channel_id，如果没有匹配到则返回None
-    """
-    # 标准化输入频道名称
     standard_input = normalize_channel_name(channel_name)
-    
-    # 精确匹配
     for channel_id, channel_info in CHANNELS.items():
         standard_channel = normalize_channel_name(channel_info['name'])
         if standard_input == standard_channel:
             return channel_id
-    
-    # 如果启用了模糊匹配
     if CONFIG.get('channel_matching', {}).get('fuzzy_match', True):
         best_match = None
         best_score = 0
@@ -297,8 +205,7 @@ def match_channel(channel_name):
         for channel_id, channel_info in CHANNELS.items():
             channel_name = channel_info['name']
             standard_channel = normalize_channel_name(channel_name)
-            
-            # 计算相似度
+
             score = difflib.SequenceMatcher(None, standard_input, standard_channel).ratio()
             
             if score > best_score and score >= threshold:
@@ -312,22 +219,18 @@ def match_channel(channel_name):
     return None
 
 def main():
-    """主函数"""
     logger.info("开始生成EPG...")
     
     total_channels = len(CHANNELS)
     logger.info(f"总共有 {total_channels} 个频道需要抓取")
-    
-    # 初始化结果字典，包含所有配置频道
+
     final_programs_dict = {}
-    # 预先添加所有配置频道，确保成功率计算基于所有频道
     for channel_id, channel_info in CHANNELS.items():
         final_programs_dict[channel_id] = {
             'name': channel_info['name'],
             'programs': []
         }
-    
-    # 从配置文件读取源优先级
+
     sources_config = CONFIG.get('sources', [])
     sources = []
     for source_config in sources_config:
@@ -335,62 +238,47 @@ def main():
         enabled = source_config.get('enabled', True)
         if enabled and source_name in source_functions:
             sources.append((source_name, source_functions[source_name]))
-    
-    # 如果配置文件中没有指定源，使用默认顺序
+
     if not sources:
         sources = [
             ('tvsou', source_functions['tvsou']),
             ('tvmao', source_functions['tvmao']),
             ('cctv', source_functions['cctv'])
         ]
-    
-    # 从配置文件读取成功率阈值
+
     success_threshold = CONFIG.get('success_threshold', 80.0)
     logger.info(f"成功率阈值: {success_threshold}%")
-    
-    # 按优先级处理每个源
+
     for source_name, source_func in sources:
         if not source_func:
             logger.warning(f"跳过不可用的源: {source_name}")
             continue
         
         logger.info(f"\n=== 使用 {source_name} 源抓取节目单 ===")
-        
-        # 调用源的抓取函数
+
         try:
-            # 根据源类型调用不同的抓取策略
             if source_name == 'cctv':
-                # CCTV源只抓取CCTV频道
                 source_programs = source_func()
             elif source_name == 'tvmao':
-                # 分阶段抓取：先抓取非CCTV频道，再补充CCTV频道
-                # 1. 先抓取非CCTV频道
                 logger.info("TVMao源第一阶段，抓取非CCTV频道")
                 satellite_programs = source_func('satellite')
-                
-                # 2. 处理非CCTV频道
                 filtered_programs = {}
                 for channel_name, programs in satellite_programs.items():
                     if not (channel_name.startswith('CCTV') or channel_name.startswith('央视')):
                         filtered_programs[channel_name] = programs
                 
                 logger.info(f"TVMao源第一阶段，处理 {len(filtered_programs)} 个非CCTV频道")
-                
-                # 3. 第二阶段：补充处理CCTV频道中没有节目单的频道
-                # 查找需要补充的CCTV频道
+
                 cctv_channels_need_supplement = []
                 for channel_id, channel_data in final_programs_dict.items():
-                    # 检查是否是CCTV频道且没有节目
                     if (channel_data['name'].startswith('CCTV') or channel_data['name'].startswith('央视')) and len(channel_data['programs']) == 0:
                         cctv_channels_need_supplement.append(channel_id)
                 
                 if cctv_channels_need_supplement:
                     logger.info(f"TVMao源第二阶段，抓取需要补充的CCTV频道")
-                    # 只抓取CCTV频道来补充
                     cctv_programs = source_func('cctv')
                     
                     logger.info(f"TVMao源第二阶段，处理 {len(cctv_programs)} 个CCTV频道")
-                    # 查找TVMao源中对应的CCTV频道
                     for channel_name, programs in cctv_programs.items():
                         if (channel_name.startswith('CCTV') or channel_name.startswith('央视')):
                             matched_channel = match_channel(channel_name)
@@ -400,15 +288,12 @@ def main():
                 
                 source_programs = filtered_programs
             else:
-                # 其他源正常调用
                 source_programs = source_func()
             
             logger.info(f"{source_name} 源抓取完成，获取到 {len(source_programs)} 个频道的节目单")
             
-            # 将源返回的节目单转换为标准格式
             standard_programs = {}
             for channel_name, programs in source_programs.items():
-                # 优化的频道匹配
                 matched_channel = match_channel(channel_name)
                 
                 if matched_channel:
@@ -420,11 +305,9 @@ def main():
                     logger.debug(f"未找到匹配的频道: {channel_name}")
             
             logger.info(f"{source_name} 源匹配到 {len(standard_programs)} 个频道")
-            
-            # 合并到最终结果
+
             for channel_id, channel_data in standard_programs.items():
                 if channel_id in final_programs_dict:
-                    # 如果频道已存在，合并节目单
                     final_programs_dict[channel_id]['programs'] = merge_programs(
                         final_programs_dict[channel_id]['programs'],
                         channel_data['programs']
@@ -442,18 +325,13 @@ def main():
         except Exception as e:
             logger.error(f"使用 {source_name} 源抓取节目单失败: {e}", exc_info=True)
     
-    # 生成XMLTV文件
     xmltv_content = generate_xmltv(final_programs_dict)
-    
-    # 保存到文件 - 使用固定名称，不包含日期
+
     output_dir = CONFIG.get('output', {}).get('dir', 'output')
     output_file = os.path.join(output_dir, 'temp')  # 临时文件名，实际会被覆盖为epg.gz
-    
-    # 保存XMLTV文件，只生成epg.gz
+
     save_xmltv(xmltv_content, output_file)
-    
-    # 无需清理旧文件，因为每次都会覆盖epg.gz
-    
+
     logger.info(f"\nEPG生成完成")
     logger.info(f"共处理 {len(final_programs_dict)} 个频道")
     
@@ -484,4 +362,5 @@ if __name__ == "__main__":
     except Exception as e:
         import traceback
         print(f"Error: {e}")
+
         traceback.print_exc()
