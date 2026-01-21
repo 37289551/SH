@@ -39,6 +39,9 @@ def get_cctv_epg(channel_id, date_str):
         logger.error("未设置环境变量CCTV_API_URL")
         return None
     
+    # 替换URL中的占位符
+    api_url = api_url.format(channel_id=channel_id, date_str=date_str)
+    
     try:
         logger.info(f"请求CCTV API: {api_url}")
         response = requests.get(api_url, timeout=15)
