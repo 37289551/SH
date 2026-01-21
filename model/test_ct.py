@@ -12,7 +12,7 @@ import tempfile
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 # 导入新的CCTV API模块
-from cctv_api_epg import get_cctv_epg, generate_xmltv, CCTV_CHANNELS, validate_date
+from capi import get_cctv_epg, generate_xmltv, CCTV_CHANNELS, validate_date
 
 def test_api_call(channel_id, date_str):
     print(f"\n=== 测试API调用: {channel_id} ===")
