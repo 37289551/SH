@@ -11,23 +11,25 @@ import argparse
 # 使用根日志配置，确保日志能正确输出到主日志文件
 logger = logging.getLogger(__name__)
 
-# 频道名称映射
+# 频道名称映射 - 与cctv_api_epg.py保持一致，包含API所需的特殊ID
 CCTV_CHANNELS = {
     'cctv1': 'CCTV-1 综合',
     'cctv2': 'CCTV-2 财经',
     'cctv3': 'CCTV-3 综艺',
     'cctv4': 'CCTV-4 中文国际',
+    'cctveurope': 'CCTV-4 欧洲',  # CCTV4欧洲频道API接口
+    'cctvamerica': 'CCTV-4 美洲',  # CCTV4美洲频道API接口
     'cctv5': 'CCTV-5 体育',
     'cctv5plus': 'CCTV-5+ 体育赛事',
     'cctv6': 'CCTV-6 电影',
     'cctv7': 'CCTV-7 国防军事',
     'cctv8': 'CCTV-8 电视剧',
-    'cctv9': 'CCTV-9 纪录',
+    'cctvjilu': 'CCTV-9 纪录',  # 使用正确的API接口名称
     'cctv10': 'CCTV-10 科教',
     'cctv11': 'CCTV-11 戏曲',
     'cctv12': 'CCTV-12 社会与法',
     'cctv13': 'CCTV-13 新闻',
-    'cctv14': 'CCTV-14 少儿',
+    'cctvchild': 'CCTV-14 少儿',  # 使用正确的API接口名称
     'cctv15': 'CCTV-15 音乐',
     'cctv16': 'CCTV-16 奥林匹克',
     'cctv17': 'CCTV-17 农业农村'
