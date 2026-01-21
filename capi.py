@@ -57,7 +57,7 @@ def get_cctv_epg(channel_id, date_str):
         data = json.loads(json_text)
         
         if 'errcode' in data:
-            logger.warning(f"CCTV API返回错误码: {data['errcode']}, 错误信息: {data.get('msg', '无')}")
+            logger.warning(f"CCTV: {data['errcode']}, 错误信息: {data.get('msg', '无')}")
             return None
         
         if 'data' not in data:
