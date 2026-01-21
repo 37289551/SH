@@ -48,6 +48,46 @@ CCTV_NAME_MAPPING = {
     '中文国际频道': 'CCTV-4 中文国际',
     '国际频道': 'CCTV-4 中文国际',
     
+    # CCTV-4 欧洲
+    'CCTV4EUROPE': 'CCTV-4 欧洲',
+    'CCTV-4EUROPE': 'CCTV-4 欧洲',
+    'CCTV-4 欧洲': 'CCTV-4 欧洲',
+    'CCTV-4欧洲': 'CCTV-4 欧洲',
+    'CCTV4 欧洲': 'CCTV-4 欧洲',
+    'CCTV4欧洲': 'CCTV-4 欧洲',
+    'cctv4europe': 'CCTV-4 欧洲',
+    'cctv-4europe': 'CCTV-4 欧洲',
+    'cctv-4 欧洲': 'CCTV-4 欧洲',
+    'cctv-4欧洲': 'CCTV-4 欧洲',
+    'cctv4 欧洲': 'CCTV-4 欧洲',
+    'cctv4欧洲': 'CCTV-4 欧洲',
+    '央视四套欧洲': 'CCTV-4 欧洲',
+    'CCTV-4 Europe': 'CCTV-4 欧洲',
+    'CCTV4 Europe': 'CCTV-4 欧洲',
+    '中央电视台中文国际频道欧洲版': 'CCTV-4 欧洲',
+    '中文国际频道欧洲版': 'CCTV-4 欧洲',
+    '国际频道欧洲版': 'CCTV-4 欧洲',
+    
+    # CCTV-4 美洲
+    'CCTV4AMERICA': 'CCTV-4 美洲',
+    'CCTV-4AMERICA': 'CCTV-4 美洲',
+    'CCTV-4 美洲': 'CCTV-4 美洲',
+    'CCTV-4美洲': 'CCTV-4 美洲',
+    'CCTV4 美洲': 'CCTV-4 美洲',
+    'CCTV4美洲': 'CCTV-4 美洲',
+    'cctv4america': 'CCTV-4 美洲',
+    'cctv-4america': 'CCTV-4 美洲',
+    'cctv-4 美洲': 'CCTV-4 美洲',
+    'cctv-4美洲': 'CCTV-4 美洲',
+    'cctv4 美洲': 'CCTV-4 美洲',
+    'cctv4美洲': 'CCTV-4 美洲',
+    '央视四套美洲': 'CCTV-4 美洲',
+    'CCTV-4 America': 'CCTV-4 美洲',
+    'CCTV4 America': 'CCTV-4 美洲',
+    '中央电视台中文国际频道美洲版': 'CCTV-4 美洲',
+    '中文国际频道美洲版': 'CCTV-4 美洲',
+    '国际频道美洲版': 'CCTV-4 美洲',
+    
     # CCTV-5 体育
     'CCTV5': 'CCTV-5 体育',
     'CCTV-5': 'CCTV-5 体育',
@@ -220,7 +260,21 @@ CCTV_NAME_MAPPING = {
     'cctv-17农业': 'CCTV-17 农业农村',  # 添加农业版本
     '中央电视台农业农村频道': 'CCTV-17 农业农村',
     '农业农村频道': 'CCTV-17 农业农村',
-    '农业频道': 'CCTV-17 农业农村'  # 添加农业频道映射
+    '农业频道': 'CCTV-17 农业农村',  # 添加农业频道映射
+    
+    # CNGN 中国环球电视网
+    'CNGN': 'CNGN',
+    'cngn': 'CNGN',
+    'CCTV-NEWS': 'CNGN',
+    'cctv-news': 'CNGN',
+    'CCTVNEWS': 'CNGN',
+    'cctvnews': 'CNGN',
+    '中国环球电视网': 'CNGN',
+    '环球电视网': 'CNGN',
+    'CGTN': 'CNGN',
+    'cgtn': 'CNGN',
+    '中央电视台英语新闻频道': 'CNGN',
+    '英语新闻频道': 'CNGN'
 }
 
 # 卫视频道名称映射表
@@ -276,6 +330,82 @@ SATELLITE_NAME_MAPPING = {
     '湖北卫视': '湖北卫视',
     'HubeiTV': '湖北卫视',
     'HBTV': '湖北卫视',
+    
+    # 新添加频道
+    # 卡酷少儿
+    '卡酷少儿': '卡酷少儿',
+    '卡酷动画': '卡酷少儿',
+    'KakuKids': '卡酷少儿',
+    'KAKUKIDS': '卡酷少儿',
+    
+    # 厦门卫视
+    '厦门卫视': '厦门卫视',
+    'XiamenTV': '厦门卫视',
+    'XMWS': '厦门卫视',
+    
+    # 深圳卫视
+    '深圳卫视': '深圳卫视',
+    'ShenzhenTV': '深圳卫视',
+    'SZTV': '深圳卫视',
+    
+    # 广西卫视
+    '广西卫视': '广西卫视',
+    'GuangxiTV': '广西卫视',
+    'GXTV': '广西卫视',
+    
+    # 金鹰卡通
+    '金鹰卡通': '金鹰卡通',
+    '湖南金鹰卡通频道': '金鹰卡通',
+    '金鹰卡通卫视': '金鹰卡通',
+    'GoldenEagleCartoon': '金鹰卡通',
+    'GOLDENEAGLECARTOON': '金鹰卡通',
+    '金鹰卡通频道': '金鹰卡通',
+    '湖南金鹰卡通': '金鹰卡通',
+    '湖南金鹰卡通卫视': '金鹰卡通',
+    '金鹰卡通台': '金鹰卡通',
+    
+    # 哈哈炫动
+    '哈哈炫动': '哈哈炫动',
+    '哈哈炫动卫视': '哈哈炫动',
+    'HahaXD': '哈哈炫动',
+    
+    # 天津卫视
+    '天津卫视': '天津卫视',
+    'TianjinTV': '天津卫视',
+    'TJTV': '天津卫视',
+    
+    # 藏语卫视
+    '藏语卫视': '藏语卫视',
+    '西藏藏语卫视': '藏语卫视',
+    'TibetanTV': '藏语卫视',
+    
+    # 延边卫视
+    '延边卫视': '延边卫视',
+    'YanbianTV': '延边卫视',
+    'YBT': '延边卫视',
+    
+    # 兵团卫视
+    '兵团卫视': '兵团卫视',
+    '新疆兵团卫视': '兵团卫视',
+    'BingtuanTV': '兵团卫视',
+    
+    # 海峡卫视
+    '海峡卫视': '海峡卫视',
+    'StraitTV': '海峡卫视',
+    'HXTV': '海峡卫视',
+    
+    # 黄河卫视
+    '黄河卫视': '黄河卫视',
+    'YellowRiverTV': '黄河卫视',
+    
+    # 康巴卫视
+    '康巴卫视': '康巴卫视',
+    'KangbaTV': '康巴卫视',
+    
+    # 三沙卫视
+    '三沙卫视': '三沙卫视',
+    'SanshaTV': '三沙卫视',
+    'SSTV': '三沙卫视',
 }
 
 # 合并所有映射表
@@ -299,21 +429,29 @@ def get_standard_channel_name(channel_name):
     # 去除首尾空格，转换为小写进行匹配
     normalized = channel_name.strip().lower()
     
-    # 先尝试直接匹配
+    # 1. 先尝试直接匹配
     if channel_name in CHANNEL_NAME_MAPPING:
         return CHANNEL_NAME_MAPPING[channel_name]
     
-    # 尝试小写匹配
+    # 2. 尝试小写匹配
     for key, value in CHANNEL_NAME_MAPPING.items():
         if key.lower() == normalized:
             return value
     
-    # 尝试部分匹配（针对带地区或其他后缀的情况）
+    # 3. 针对CCTV-4 欧洲和美洲的特殊处理
+    if normalized == 'cctv-4 欧洲' or normalized == 'cctv4 欧洲' or 'europe' in normalized:
+        return 'CCTV-4 欧洲'
+    if normalized == 'cctv-4 美洲' or normalized == 'cctv4 美洲' or 'america' in normalized:
+        return 'CCTV-4 美洲'
+    
+    # 4. 尝试更安全的部分匹配（避免前缀匹配问题）
     for key, value in CHANNEL_NAME_MAPPING.items():
-        if normalized in key.lower() or key.lower() in normalized:
+        key_lower = key.lower()
+        # 只匹配完整的单词或频道名称的开始/结束
+        if f" {normalized} " in f" {key_lower} " or key_lower.startswith(f"{normalized} ") or key_lower.endswith(f" {normalized}"):
             return value
     
-    # 如果都没有匹配到，返回原始名称
+    # 5. 如果都没有匹配到，返回原始名称
     return channel_name
 
 def normalize_channel_name(channel_name):
