@@ -6,18 +6,15 @@ from datetime import datetime, timedelta
 import os
 import re
 
-# 配置日志 - 设置为DEBUG级别以获取更详细的信息
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# 添加文件日志记录
 file_handler = logging.FileHandler('tvsou_epg.log', encoding='utf-8')
 file_handler.setLevel(logging.DEBUG)
 file_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 file_handler.setFormatter(file_formatter)
 logger.addHandler(file_handler)
 def make_request(url, headers=None, retry=2, delay=2):
-    """带重试机制的HTTP请求"""
     if headers is None:
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
@@ -39,7 +36,6 @@ def make_request(url, headers=None, retry=2, delay=2):
                 return None
 
 def fetch_tvsou_channel_programs(url, channel_type):
-    """从指定URL提取特定类型频道的节目单"""
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
     }
@@ -53,23 +49,15 @@ def fetch_tvsou_channel_programs(url, channel_type):
     
     try:
         logger.info(f"开始解析{channel_type}页面: {url}")
-        
-        # 从页面中提取所有频道的节目单
-        # 首先查找包含频道名称的元素，通常是链接或标题
         channel_links = soup.find_all('a', href=lambda href: href and '/epg/' in href and ('yangshi' in href or 'weishi' in href) and '_w' not in href)
         logger.info(f"找到 {len(channel_links)} 个频道链接")
-        
-        # 提取唯一的频道链接，过滤掉分类标签和日期标签
         unique_channels = {}
         for link in channel_links:
             channel_name = link.text.strip()
             channel_href = link['href']
             
-            # 过滤掉分类标签
             if channel_name in ['央视', '卫视']:
                 continue
-            
-            # 过滤掉日期标签
             if re.match(r'^(周一|周二|周三|周四|周五|周六|周日)', channel_name):
                 continue
             
@@ -79,21 +67,14 @@ def fetch_tvsou_channel_programs(url, channel_type):
         logger.info(f"去重后得到 {len(unique_channels)} 个频道")
         
         for channel_href, channel_name in unique_channels.items():
-            # 确保是完整URL
             if not channel_href.startswith('http'):
                 channel_href = f"https://www.tvsou.com{channel_href}"
-            
             logger.info(f"正在提取 {channel_name} 的节目单: {channel_href}")
-            
-            # 请求单个频道的节目单页面
             channel_response = make_request(channel_href, headers=headers)
             if not channel_response:
                 continue
-            
             channel_soup = BeautifulSoup(channel_response.text, 'html.parser')
             programs = []
-            
-            # 查找节目列表，tvsou的节目单通常在表格中
             program_tables = channel_soup.find_all('table')
             for table in program_tables:
                 rows = table.find_all('tr')
@@ -105,7 +86,6 @@ def fetch_tvsou_channel_programs(url, channel_type):
                         if time_str and title and ':' in time_str:
                             programs.append({'time': time_str, 'title': title})
             
-            # 去重节目
             unique_programs = []
             seen = set()
             for prog in programs:
@@ -126,28 +106,18 @@ def fetch_tvsou_channel_programs(url, channel_type):
     return programs_dict
 
 def fetch_tvsou_programs():
-    """从tvsou.com提取央视和卫视节目单"""
     programs_dict = {}
-    
-    # 央视页面
     cctv_url = "https://www.tvsou.com/epg/yangshi/"
     cctv_programs = fetch_tvsou_channel_programs(cctv_url, "央视")
     programs_dict.update(cctv_programs)
-    
-    # 卫视页面
     satellite_url = "https://www.tvsou.com/epg/weishi/"
     satellite_programs = fetch_tvsou_channel_programs(satellite_url, "卫视")
     programs_dict.update(satellite_programs)
-    
-    # 过滤掉不需要的频道
     filtered_programs = {}
     for channel_name, programs in programs_dict.items():
-        # 跳过分类标签和日期标签
         if channel_name in ['央视', '卫视'] or re.match(r'^(周一|周二|周三|周四|周五|周六|周日)\(\d{2}\.\d{2}\)$', channel_name):
             logger.info(f"过滤掉不需要的频道: {channel_name}")
             continue
-        
-        # 使用is_cctv_or_satellite函数检查是否是真正的央视或卫视频道
         if is_cctv_or_satellite(channel_name):
             filtered_programs[channel_name] = programs
         else:
@@ -156,112 +126,71 @@ def fetch_tvsou_programs():
     return filtered_programs
 
 def is_cctv_or_satellite(channel_name):
-    """判断是否是央视或卫视频道"""
-    # 央视关键词
     cctv_keywords = ['CCTV', '央视', '中央电视台']
-    # 卫视频道关键词
     satellite_keywords = ['卫视', '东方', '浙江', '湖南', '江苏', '广东', '北京', '安徽', '山东', 
                          '河南', '湖北', '四川', '重庆', '天津', '江西', '福建', '云南', '贵州',
                          '黑龙江', '吉林', '辽宁', '内蒙古', '山西', '陕西', '甘肃', '青海', '宁夏',
                          '新疆', '西藏', '广西', '海南']
-    
     channel_name_lower = channel_name.lower()
-    
-    # 检查央视
     for keyword in cctv_keywords:
         if keyword in channel_name:
             return True
-    
-    # 检查卫视
     for keyword in satellite_keywords:
         if keyword in channel_name:
             return True
-    
     return False
 
 def generate_xmltv(programs_dict):
-    """生成XMLTV格式的EPG文件"""
     today = datetime.now().strftime('%Y%m%d')
-    
-    # 创建XML内容
     xml_content = f'''<?xml version="1.0" encoding="UTF-8"?>
 <tv generator-info-name="TVSou EPG Generator" generator-info-url="https://www.tvsou.com/epg">
 '''
-    
     for channel_name, programs in programs_dict.items():
-        # 生成频道ID（使用频道名的拼音或缩写）
         channel_id = channel_name.replace(' ', '_').replace('-', '_').replace(':', '_')
-        
-        # 添加频道信息
         xml_content += f'''
   <channel id="{channel_id}">
     <display-name>{channel_name}</display-name>
   </channel>
 '''
-        
-        # 添加节目信息
         for program in programs:
             time_str = program['time']
             title = program['title']
-            
-            # 构建开始时间
             start_time = f"{today}{time_str.replace(':', '')}00"
-            
-            # 简单处理：假设每个节目持续30分钟
             try:
                 hour, minute = map(int, time_str.split(':'))
                 end_time = datetime.combine(datetime.now().date(), datetime.min.time()) + timedelta(hours=hour, minutes=minute+30)
                 end_time_str = end_time.strftime(f"{today}%H%M00")
             except:
-                # 如果时间解析失败，跳过该节目
                 continue
-            
-            # 添加节目
             xml_content += f'''
   <programme channel="{channel_id}" start="{start_time}" stop="{end_time_str}">
     <title lang="zh">{title}</title>
   </programme>
 '''
-    
-    xml_content += '''
+    xml_content += f'''
 </tv>
 '''
-    
     return xml_content
 
 def main():
-    """主函数"""
     logger.info("开始从tvsou.com提取节目单...")
-    
-    # 抓取节目单
     programs_dict = fetch_tvsou_programs()
-    
     logger.info(f"共提取到 {len(programs_dict)} 个频道的节目单")
-    
     if programs_dict:
-        # 生成XMLTV文件
         xmltv_content = generate_xmltv(programs_dict)
-        
-        # 保存到文件
         output_dir = 'output'
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
-        
         today = datetime.now().strftime('%Y%m%d')
         output_file = os.path.join(output_dir, f'tvsou_epg_{today}.xml')
-        
         with open(output_file, 'w', encoding='utf-8') as f:
             f.write(xmltv_content)
-        
         logger.info(f"节目单已保存到 {output_file}")
-        
-        # 打印统计信息
         total_programs = 0
         for channel_name, programs in programs_dict.items():
             program_count = len(programs)
             total_programs += program_count
             logger.info(f"  {channel_name}: {program_count} 个节目")
-        
         logger.info(f"共提取到 {total_programs} 个节目")
     else:
         logger.warning("未提取到任何节目单")

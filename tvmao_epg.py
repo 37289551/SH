@@ -6,14 +6,11 @@ import os
 import time
 import re
 
-# 导入频道名称映射表
 from channel_mapping import normalize_channel_name
 
-# 配置日志 - 设置为INFO级别，生产环境可改为INFO
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# 添加文件日志记录
 file_handler = logging.FileHandler('tvmao_epg.log', encoding='utf-8')
 file_handler.setLevel(logging.INFO)
 file_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
@@ -21,7 +18,6 @@ file_handler.setFormatter(file_formatter)
 logger.addHandler(file_handler)
 
 def make_request(url, session=None, headers=None, retry=3, delay=2):
-    """带重试机制的HTTP请求，支持会话保持"""
     if headers is None:
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
@@ -50,25 +46,16 @@ def make_request(url, session=None, headers=None, retry=3, delay=2):
                 return None
 
 def get_current_weekday():
-    """获取当前是一周的第几天（1-7，周一为1）"""
     return datetime.now().weekday() + 1
 
 def generate_time_slots():
-    """生成时间槽列表，从0到22，间隔2"""
     return list(range(0, 24, 2))
 
 def generate_urls(channel_type, weekday=None):
-    """生成所有需要抓取的URL列表"""
     urls = []
-    
-    # 如果没有指定星期几，使用当前星期几
     if weekday is None:
         weekday = get_current_weekday()
-    
-    # 生成时间槽
     time_slots = generate_time_slots()
-    
-    # 构建基础URL前缀
     if channel_type == 'cctv':
         url_prefix = "https://a-s1.tvmao.com/program/duration/cctv/"
     elif channel_type == 'satellite':
@@ -76,8 +63,6 @@ def generate_urls(channel_type, weekday=None):
     else:
         logger.error(f"不支持的频道类型: {channel_type}")
         return urls
-    
-    # 生成所有URL
     for slot in time_slots:
         url = f"{url_prefix}w{weekday}-h{slot}.html"
         urls.append(url)
@@ -86,7 +71,6 @@ def generate_urls(channel_type, weekday=None):
     return urls
 
 def parse_program_item(item, channel_name):
-    """解析单个节目项"""
     try:
         # 提取时间和标题
         
@@ -97,69 +81,49 @@ def parse_program_item(item, channel_name):
             time_str = spans[0].text.strip()
             title = spans[1].text.strip()
             if time_str and title and ':' in time_str:
-                # 检查标题中是否包含实际播出时间
                 title_time_match = re.search(r'(\d{2}:\d{2})-(\d{2}:\d{2})', title)
                 if title_time_match:
-                    # 使用标题中的实际播出时间
                     time_str = title_time_match.group(1)
-                    # 提取纯标题，去除时间部分
                     pure_title = re.sub(r'\s*\d{2}:\d{2}-\d{2}:\d{2}\s*$', '', title).strip()
                     return {'time': time_str, 'title': pure_title}
                 return {'time': time_str, 'title': title}
         
-        # 2. 尝试查找带有time类的元素
         time_elem = item.find(['span', 'div', 'p'], class_=lambda cls: cls and ('time' in cls or 'program-time' in cls or 'start-time' in cls))
         title_elem = item.find(['span', 'div', 'p'], class_=lambda cls: cls and ('title' in cls or 'program-title' in cls or 'name' in cls))
-        
         if time_elem and title_elem:
             time_str = time_elem.text.strip()
             title = title_elem.text.strip()
-            
             if time_str and title and ':' in time_str:
-                # 检查标题中是否包含实际播出时间
                 title_time_match = re.search(r'(\d{2}:\d{2})-(\d{2}:\d{2})', title)
                 if title_time_match:
-                    # 使用标题中的实际播出时间
                     time_str = title_time_match.group(1)
-                    # 提取纯标题，去除时间部分
                     pure_title = re.sub(r'\s*\d{2}:\d{2}-\d{2}:\d{2}\s*$', '', title).strip()
                     return {'time': time_str, 'title': pure_title}
                 return {'time': time_str, 'title': title}
         
-        # 3. 尝试从文本中直接提取时间和标题
         item_text = item.text.strip()
         if item_text:
-            # 查找时间格式 HH:MM
             time_match = re.search(r'(\d{2}:\d{2})', item_text)
             if time_match:
                 time_str = time_match.group(1)
-                # 提取时间后的文本作为标题
                 title = item_text[time_match.end():].strip()
-                # 检查标题中是否包含实际播出时间
                 title_time_match = re.search(r'(\d{2}:\d{2})-(\d{2}:\d{2})', title)
                 if title_time_match:
-                    # 使用标题中的实际播出时间
                     time_str = title_time_match.group(1)
-                    # 提取纯标题，去除时间部分
                     pure_title = re.sub(r'\s*\d{2}:\d{2}-\d{2}:\d{2}\s*$', '', title).strip()
                     return {'time': time_str, 'title': pure_title}
                 if title:
                     return {'time': time_str, 'title': title}
         
-        # 4. 尝试查找所有文本节点，寻找时间和标题
         all_text = ' '.join(item.stripped_strings)
         if all_text:
             time_match = re.search(r'(\d{2}:\d{2})', all_text)
             if time_match:
                 time_str = time_match.group(1)
-                # 提取时间后的文本作为标题
                 title = all_text[time_match.end():].strip()
-                # 检查标题中是否包含实际播出时间
                 title_time_match = re.search(r'(\d{2}:\d{2})-(\d{2}:\d{2})', title)
                 if title_time_match:
-                    # 使用标题中的实际播出时间
                     time_str = title_time_match.group(1)
-                    # 提取纯标题，去除时间部分
                     pure_title = re.sub(r'\s*\d{2}:\d{2}-\d{2}:\d{2}\s*$', '', title).strip()
                     return {'time': time_str, 'title': pure_title}
                 if title:
@@ -171,56 +135,34 @@ def parse_program_item(item, channel_name):
         return None
 
 def fetch_program_items(soup):
-    """从页面中提取节目列表"""
     programs = []
-    
     try:
-        # 1. 首先尝试查找表格结构（TVMao常用的节目单格式）
         tables = soup.find_all('table')
         logger.info(f"找到 {len(tables)} 个表格")
-        
         processed_channels = set()
-        
         for table in tables:
             rows = table.find_all('tr')
             for row in rows:
                 cells = row.find_all(['td', 'th'])
                 if len(cells) >= 2:
-                    # 每个行代表一个频道，第一个单元格是频道名称
                     channel_name = cells[0].text.strip()
-                    
-                    # 跳过空频道名称
                     if not channel_name:
                         continue
-                    
-                    # 标准化频道名称
                     standard_channel_name = normalize_channel_name(channel_name)
-                    
-                    # 跳过已处理的频道，避免重复
                     if standard_channel_name in processed_channels:
                         continue
                     processed_channels.add(standard_channel_name)
-                    
                     logger.info(f"处理频道: {standard_channel_name}")
-                    
-                    # 后续单元格是该频道在不同时间段的节目
                     for i, cell in enumerate(cells[1:], 2):
                         cell_text = cell.text.strip()
                         if not cell_text:
                             continue
-                        
-                        # 检查单元格中是否包含节目信息（包含时间格式）
                         time_match = re.search(r'(\d{2}:\d{2})-(\d{2}:\d{2})', cell_text)
                         if time_match:
-                            # 提取节目名称和时间
                             start_time = time_match.group(1)
                             end_time = time_match.group(2)
-                            
-                            # 提取纯标题，去除时间部分
                             pure_title = re.sub(r'\s*\d{2}:\d{2}-\d{2}:\d{2}\s*$', '', cell_text).strip()
-                            # 进一步清理标题中的多余空白
                             pure_title = re.sub(r'\s+', ' ', pure_title)
-                            
                             if pure_title and start_time and end_time:
                                 programs.append((standard_channel_name, {'time': start_time, 'end_time': end_time, 'title': pure_title}))
         
@@ -231,7 +173,6 @@ def fetch_program_items(soup):
     return programs
 
 def fetch_tvmao_programs(channel_type=None, weekday=None):
-    """抓取tvmao.com的节目单"""
     programs_dict = {}
     
     # 生成所有需要抓取的URL

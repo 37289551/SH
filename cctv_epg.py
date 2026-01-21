@@ -8,36 +8,32 @@ import re
 import json
 import argparse
 
-# 使用根日志配置，确保日志能正确输出到主日志文件
 logger = logging.getLogger(__name__)
 
-# 频道名称映射 - 与cctv_api_epg.py保持一致，包含API所需的特殊ID
 CCTV_CHANNELS = {
     'cctv1': 'CCTV-1 综合',
     'cctv2': 'CCTV-2 财经',
     'cctv3': 'CCTV-3 综艺',
     'cctv4': 'CCTV-4 中文国际',
-    'cctveurope': 'CCTV-4 欧洲',  # CCTV4欧洲频道API接口
-    'cctvamerica': 'CCTV-4 美洲',  # CCTV4美洲频道API接口
+    'cctveurope': 'CCTV-4 欧洲',
+    'cctvamerica': 'CCTV-4 美洲',
     'cctv5': 'CCTV-5 体育',
     'cctv5plus': 'CCTV-5+ 体育赛事',
     'cctv6': 'CCTV-6 电影',
     'cctv7': 'CCTV-7 国防军事',
     'cctv8': 'CCTV-8 电视剧',
-    'cctvjilu': 'CCTV-9 纪录',  # 使用正确的API接口名称
+    'cctvjilu': 'CCTV-9 纪录',
     'cctv10': 'CCTV-10 科教',
     'cctv11': 'CCTV-11 戏曲',
     'cctv12': 'CCTV-12 社会与法',
     'cctv13': 'CCTV-13 新闻',
-    'cctvchild': 'CCTV-14 少儿',  # 使用正确的API接口名称
+    'cctvchild': 'CCTV-14 少儿',
     'cctv15': 'CCTV-15 音乐',
     'cctv16': 'CCTV-16 奥林匹克',
     'cctv17': 'CCTV-17 农业农村'
 }
 
 def get_cctv_epg(channel_id, date_str):
-    """通过CCTV API获取节目单数据"""
-    # API URL模板
     api_url = f"https://api.cntv.cn/epg/getEpgInfoByChannelNew?c={channel_id}&serviceId=tvcctv&d={date_str}&t=jsonp&cb=callback"
     
     try:
@@ -45,7 +41,6 @@ def get_cctv_epg(channel_id, date_str):
         response = requests.get(api_url, timeout=15)
         response.raise_for_status()
         
-        # 解析JSONP响应
         jsonp_text = response.text
         json_text = jsonp_text[jsonp_text.index('(') + 1:jsonp_text.rindex(')')]
         data = json.loads(json_text)
@@ -57,41 +52,35 @@ def get_cctv_epg(channel_id, date_str):
         return None
 
 def generate_xmltv(programs_dict, target_date, timezone):
-    """生成XMLTV格式的EPG文件"""
-    # 创建XML内容
     xml_content = f'''<?xml version="1.0" encoding="UTF-8"?>
 <tv generator-info-name="CCTV API EPG Generator" generator-info-url="https://tv.cctv.com/">
 '''
     
-    # 统计节目数量
     total_programs = 0
     
     for channel_id, programs in programs_dict.items():
         channel_name = CCTV_CHANNELS.get(channel_id, channel_id)
         channel_xml_id = channel_name.replace(' ', '_').replace('-', '_')
         
-        # 添加频道信息
-        xml_content += f'''  <channel id="{channel_xml_id}">
+        xml_content += f'''
+  <channel id="{channel_xml_id}">
     <display-name>{channel_name}</display-name>
   </channel>
 '''
         
-        # 添加节目信息
         channel_program_count = 0
         for program in programs:
             try:
-                # 解析开始和结束时间，并添加时区信息
                 start_time = datetime.fromtimestamp(program['startTime'], timezone)
                 end_time = datetime.fromtimestamp(program['endTime'], timezone)
                 
-                # 格式化时间为XMLTV格式
                 start_str = start_time.strftime('%Y%m%d%H%M%S')
                 end_str = end_time.strftime('%Y%m%d%H%M%S')
                 
                 title = program['title']
                 
-                # 添加节目
-                xml_content += f'''  <programme channel="{channel_xml_id}" start="{start_str} +0800" stop="{end_str} +0800">
+                xml_content += f'''
+  <programme channel="{channel_xml_id}" start="{start_str} +0800" stop="{end_str} +0800">
     <title lang="zh">{title}</title>
   </programme>
 '''
