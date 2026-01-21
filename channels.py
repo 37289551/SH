@@ -301,5 +301,89 @@ CHANNELS = {
         "url": "",
         "backup_urls": [],
         "source": "satellite"
+    },
+    "KakuKids": {
+        "name": "卡酷少儿",
+        "url": "",
+        "backup_urls": [],
+        "source": "satellite"
+    },
+    "XiamenTV": {
+        "name": "厦门卫视",
+        "url": "",
+        "backup_urls": [],
+        "source": "satellite"
+    },
+    "ShenzhenTV": {
+        "name": "深圳卫视",
+        "url": "",
+        "backup_urls": [],
+        "source": "satellite"
+    },
+    "GuangxiTV": {
+        "name": "广西卫视",
+        "url": "",
+        "backup_urls": [],
+        "source": "satellite"
+    },
+    "GoldenEagleCartoon": {
+        "name": "金鹰卡通",
+        "url": "",
+        "backup_urls": [],
+        "source": "satellite"
+    },
+    "HahaXD": {
+        "name": "哈哈炫动",
+        "url": "",
+        "backup_urls": [],
+        "source": "satellite"
+    },
+    "TianjinTV": {
+        "name": "天津卫视",
+        "url": "",
+        "backup_urls": [],
+        "source": "satellite"
+    },
+    "TibetanTV": {
+        "name": "藏语卫视",
+        "url": "",
+        "backup_urls": [],
+        "source": "satellite"
+    },
+    "YanbianTV": {
+        "name": "延边卫视",
+        "url": "",
+        "backup_urls": [],
+        "source": "satellite"
+    },
+    "BingtuanTV": {
+        "name": "兵团卫视",
+        "url": "",
+        "backup_urls": [],
+        "source": "satellite"
+    },
+    "StraitTV": {
+        "name": "海峡卫视",
+        "url": "",
+        "backup_urls": [],
+        "source": "satellite"
+    },
+    "YellowRiverTV": {
+        "name": "黄河卫视",
+        "url": "",
+        "backup_urls": [],
+        "source": "satellite"
+    },
+    "KangbaTV": {
+        "name": "康巴卫视",
+        "url": "",
+        "backup_urls": [],
+        "source": "satellite"
+    },
+    "SanshaTV": {
+        "name": "三沙卫视",
+        "url": "",
+        "backup_urls": [],
+        "source": "satellite"
     }
 }
