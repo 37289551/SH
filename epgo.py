@@ -289,7 +289,7 @@ def main():
                         logger.info(f"TM第二阶段，补充CCTV频道")
                         cctv_programs = source_func('cctv')
                         
-                        logger.info(f"TM第二阶段，处理 {len(cctv_programs)} 个CCTV频道")
+                        logger.info(f"TM 第二阶段，处理 {len(cctv_programs)} 个央视频道")
                         for channel_name, programs in cctv_programs.items():
                             if (channel_name.startswith('CCTV') or channel_name.startswith('央视')):
                                 matched_channel = match_channel(channel_name)
