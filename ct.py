@@ -110,7 +110,7 @@ def validate_date(date_str):
         return False
 
 def main():
-    logger.info("开始从CCTV API提取节目单...")
+    logger.info("开始从CCTV提取节目单...")
 
     parser = argparse.ArgumentParser(description='获取CCTV节目单并生成XMLTV格式')
     parser.add_argument('--date', type=str, help='指定日期，格式为YYYYMMDD，如20260120')
