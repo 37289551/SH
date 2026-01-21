@@ -7,13 +7,13 @@ on:
       test_script:
         description: '要运行的测试脚本文件名'
         required: true
-        default: 'test_tvsou.py'
+        default: 'model/test_ts.py'
         type: choice
         options:
-          - test_tvsou.py
-          - test_tvmao.py
-          - test_cctv.py
-          - test_epgo.py
+          - model/test_ts.py
+          - model/test_tm.py
+          - model/test_ct.py
+          - model/test_epgo.py
 
 jobs:
   test-source:
@@ -38,6 +38,15 @@ jobs:
     
     # 4. 运行指定的测试脚本
     - name: 运行测试脚本
+      env:
+        # CCTV相关密钥
+        CCTV_API_URL: ${{ secrets.CCTV_API_URL }}
+        CCTV_GENERATOR_URL: ${{ secrets.CCTV_GENERATOR_URL }}
+        # TVMAO相关密钥
+        TM_CCTV: ${{ secrets.TM_CCTV }}
+        TM_SATELLITE: ${{ secrets.TM_SATELLITE }}
+        TM_REFERER: ${{ secrets.TM_REFERER }}
+        TM_GENERATOR_URL: ${{ secrets.TM_GENERATOR_URL }}
       run: python ${{ inputs.test_script }}
     
     # 5. 上传生成的节目单文件（如果有）
