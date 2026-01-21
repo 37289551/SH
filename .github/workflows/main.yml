@@ -3,7 +3,7 @@ name: EPGO
 on:
   # 每天定时运行（UTC时间0点，即北京时间8点）
   schedule:
-    - cron: '0 0 * * *'
+    - cron: '15 16 * * *'
   # 允许手动触发
   workflow_dispatch:
 
