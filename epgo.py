@@ -79,11 +79,11 @@ except ImportError as e:
     logger.error(f"导入tvmao_epg模块失败: {e}")
 
 try:
-    from cctv_epg import fetch_cctv_programs
+    from ct import fetch_cctv_programs
     source_functions['cctv'] = fetch_cctv_programs
-    logger.info("成功导入cctv_epg模块")
+    logger.info("成功导入ct模块")
 except ImportError as e:
-    logger.error(f"导入cctv_epg模块失败: {e}")
+    logger.error(f"导入ct模块失败: {e}")
 
 def generate_xmltv(programs_dict):
     """生成XMLTV格式的EPG文件"""

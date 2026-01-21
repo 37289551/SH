@@ -323,7 +323,7 @@ def generate_xmltv(programs_dict):
 
 def main():
     """主函数"""
-    logger.info("开始从tvmao.com提取节目单...")
+    logger.info("开始从tm提取节目单...")
     
     programs_dict = {}
     
