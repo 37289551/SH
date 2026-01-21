@@ -45,20 +45,16 @@ def get_cctv_epg(channel_id, date_str):
     if not api_url:
         logger.error("未找到入口CCTV_API_URL")
         return None
-    
-    # 替换URL中的占位符
+
     api_url = api_url.format(channel_id=channel_id, date_str=date_str)
     
     try:
-        logger.info(f"请求CCTV API: {api_url}")
         response = requests.get(api_url, timeout=15)
         response.raise_for_status()
         
         jsonp_text = response.text
         json_text = jsonp_text[jsonp_text.index('(') + 1:jsonp_text.rindex(')')]
         data = json.loads(json_text)
-        
-        logger.info(f"获取{channel_id}的节目单数据成功，返回数据结构: {list(data.keys())}")
         
         if 'errcode' in data:
             logger.warning(f"CCTV API返回错误码: {data['errcode']}, 错误信息: {data.get('msg', '无')}")
