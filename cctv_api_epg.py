@@ -6,6 +6,7 @@ import requests
 import logging
 import json
 from datetime import datetime, timezone, timedelta
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +41,10 @@ def validate_date(date_str):
         return False
 
 def get_cctv_epg(channel_id, date_str):
-    api_url = f"https://api.cntv.cn/epg/getEpgInfoByChannelNew?c={channel_id}&serviceId=tvcctv&d={date_str}&t=jsonp&cb=callback"
+    api_url = os.environ.get('CCTV_API_URL')
+    if not api_url:
+        logger.error("未找到入口CCTV_API_URL")
+        return None
     
     try:
         logger.info(f"请求CCTV API: {api_url}")
@@ -67,10 +71,10 @@ def get_cctv_epg(channel_id, date_str):
         return None
 
 def generate_xmltv(programs_dict, target_date, timezone):
+    generator_url = os.environ.get('CCTV_GENERATOR_URL', '')
     xml_content = f'''<?xml version="1.0" encoding="UTF-8"?>
-<tv generator-info-name="CCTV API EPG Generator" generator-info-url="https://tv.cctv.com/">
-'''
-    
+<tv generator-info-name="CCTV API EPG Generator" generator-info-url="{generator_url}">
+'''    
     total_programs = 0
     
     for channel_id, programs in programs_dict.items():

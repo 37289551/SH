@@ -21,10 +21,15 @@ def make_request(url, session=None, headers=None, retry=3, delay=2):
     if headers is None:
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-            'Referer': 'https://www.tvmao.com/',
+            'Referer': os.environ.get('TM_REFERER'),
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
             'Accept-Language': 'zh-CN,zh;q=0.8,en-US;q=0.5,en;q=0.3'
         }
+    
+    # 检查Referer是否设置
+    if 'Referer' in headers and not headers['Referer']:
+        logger.error("找不到TM_REFERER")
+        return None
     
     # 使用会话或直接请求
     request_func = session.get if session else requests.get
@@ -52,16 +57,22 @@ def generate_time_slots():
     return list(range(0, 24, 2))
 
 def generate_urls(channel_type, weekday=None):
+    import os
     urls = []
     if weekday is None:
         weekday = get_current_weekday()
     time_slots = generate_time_slots()
     if channel_type == 'cctv':
-        url_prefix = "https://a-s1.tvmao.com/program/duration/cctv/"
+        url_prefix = os.environ.get('TM_CCTV')
     elif channel_type == 'satellite':
-        url_prefix = "https://a-s1.tvmao.com/program/duration/satellite/"
+        url_prefix = os.environ.get('TM_SATELLITE')
     else:
         logger.error(f"不支持的频道类型: {channel_type}")
+        return urls
+    
+    # 检查URL前缀是否存在
+    if not url_prefix:
+        logger.error(f"未找到入口")
         return urls
     for slot in time_slots:
         url = f"{url_prefix}w{weekday}-h{slot}.html"
@@ -257,55 +268,47 @@ def fetch_tvmao_programs(channel_type=None, weekday=None):
     return programs_dict
 
 def generate_xmltv(programs_dict):
-    """生成XMLTV格式的EPG文件"""
     today = datetime.now().strftime('%Y%m%d')
     
-    # 创建XML内容
+    generator_url = os.environ.get('TM_GENERATOR_URL', '')
     xml_content = f'''<?xml version="1.0" encoding="UTF-8"?>
-<tv generator-info-name="TVMao EPG Generator" generator-info-url="https://www.tvmao.com/">
+<tv generator-info-name="TMEPG Generator" generator-info-url="{generator_url}">
 '''
     
-    # 统计节目数量
     total_programs = 0
     
     for channel_name, programs in programs_dict.items():
-        # 生成频道ID（使用频道名的拼音或缩写）
         channel_id = channel_name.replace(' ', '_').replace('-', '_').replace(':', '_')
         
-        # 添加频道信息
         xml_content += f'''
   <channel id="{channel_id}">
     <display-name>{channel_name}</display-name>
   </channel>
 '''
         
-        # 添加节目信息
         channel_program_count = 0
         for program in programs:
             time_str = program['time']
             title = program['title']
             
-            # 构建开始时间
             start_time = f"{today}{time_str.replace(':', '')}00"
             
             try:
                 if 'end_time' in program:
-                    # 使用实际的结束时间
                     end_time_str = f"{today}{program['end_time'].replace(':', '')}00"
                 else:
-                    # 简单处理：假设每个节目持续30分钟
                     hour, minute = map(int, time_str.split(':'))
                     end_time = datetime.combine(datetime.now().date(), datetime.min.time()) + timedelta(hours=hour, minutes=minute+30)
                     end_time_str = end_time.strftime(f"{today}%H%M00")
                 
-                # 添加节目
-                xml_content += f'''\n  <programme channel="{channel_id}" start="{start_time}" stop="{end_time_str}">
+                xml_content += f'''
+  <programme channel="{channel_id}" start="{start_time}" stop="{end_time_str}">
     <title lang="zh">{title}</title>
-  </programme>\n'''
+  </programme>
+'''
                 channel_program_count += 1
                 total_programs += 1
             except Exception as e:
-                # 如果时间解析失败，记录日志并继续
                 logger.warning(f"解析节目时间失败，跳过节目: {title}, 时间: {time_str}, 错误: {e}")
                 continue
         
