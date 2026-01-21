@@ -31,6 +31,13 @@ CHANNELS = {
         "backup_urls": [],
         "source": "cctv"
     },
+    "CCTV5Plus": {
+        "name": "CCTV-5+ 体育赛事",
+        "url": "https://tv.cctv.com/epg/CCTV5Plus",
+        "backup_urls": [],
+        "source": "cctv",
+        "api_id": "cctv5plus"  
+    },
     "CCTV6": {
         "name": "CCTV-6 电影",
         "url": "https://tv.cctv.com/epg/CCTV6",
@@ -54,7 +61,7 @@ CHANNELS = {
         "url": "https://tv.cctv.com/epg/CCTV9",
         "backup_urls": [],
         "source": "cctv",
-        "api_id": "cctvjilu"  # API调用时使用的特殊标识，而非cctv9
+        "api_id": "cctvjilu"  
     },
     "CCTV10": {
         "name": "CCTV-10 科教",
@@ -85,7 +92,7 @@ CHANNELS = {
         "url": "https://tv.cctv.com/epg/CCTV14",
         "backup_urls": [],
         "source": "cctv",
-        "api_id": "cctvchild"  # API调用时使用的特殊标识，而非cctv14
+        "api_id": "cctvchild"  
     },
     "CCTV15": {
         "name": "CCTV-15 音乐",
@@ -110,14 +117,14 @@ CHANNELS = {
         "url": "https://tv.cctv.com/epg/CCTV4",
         "backup_urls": [],
         "source": "cctv",
-        "api_id": "cctveurope"  # API调用时使用的特殊标识
+        "api_id": "cctveurope"  
     },
     "CCTV4America": {
         "name": "CCTV-4 美洲",
         "url": "https://tv.cctv.com/epg/CCTV4",
         "backup_urls": [],
         "source": "cctv",
-        "api_id": "cctvamerica"  # API调用时使用的特殊标识
+        "api_id": "cctvamerica" 
     },
     
     # 卫视频道

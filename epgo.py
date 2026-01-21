@@ -348,6 +348,9 @@ def main():
     success_threshold = CONFIG.get('success_threshold', 80.0)
     logger.info(f"成功率阈值: {success_threshold}%")
     
+    # 记录cctv源匹配的频道数量
+    cctv_matched_count = 0
+    
     # 按优先级处理每个源
     for source_name, source_func in sources:
         if not source_func:
@@ -377,26 +380,33 @@ def main():
                 logger.info(f"TVMao源第一阶段，处理 {len(filtered_programs)} 个非CCTV频道")
                 
                 # 3. 第二阶段：补充处理CCTV频道中没有节目单的频道
-                # 查找需要补充的CCTV频道
-                cctv_channels_need_supplement = []
-                for channel_id, channel_data in final_programs_dict.items():
-                    # 检查是否是CCTV频道且没有节目
-                    if (channel_data['name'].startswith('CCTV') or channel_data['name'].startswith('央视')) and len(channel_data['programs']) == 0:
-                        cctv_channels_need_supplement.append(channel_id)
+                # 检查cctv源匹配的频道数量，如果达到18个以上，跳过第二阶段
+                skip_cctv_supplement = False
+                if cctv_matched_count >= 18:
+                    skip_cctv_supplement = True
+                    logger.info(f"CCTV源已匹配 {cctv_matched_count} 个频道，跳过TVMao源第二阶段CCTV频道抓取")
                 
-                if cctv_channels_need_supplement:
-                    logger.info(f"TVMao源第二阶段，抓取需要补充的CCTV频道")
-                    # 只抓取CCTV频道来补充
-                    cctv_programs = source_func('cctv')
+                if not skip_cctv_supplement:
+                    # 查找需要补充的CCTV频道
+                    cctv_channels_need_supplement = []
+                    for channel_id, channel_data in final_programs_dict.items():
+                        # 检查是否是CCTV频道且没有节目
+                        if (channel_data['name'].startswith('CCTV') or channel_data['name'].startswith('央视')) and len(channel_data['programs']) == 0:
+                            cctv_channels_need_supplement.append(channel_id)
                     
-                    logger.info(f"TVMao源第二阶段，处理 {len(cctv_programs)} 个CCTV频道")
-                    # 查找TVMao源中对应的CCTV频道
-                    for channel_name, programs in cctv_programs.items():
-                        if (channel_name.startswith('CCTV') or channel_name.startswith('央视')):
-                            matched_channel = match_channel(channel_name)
-                            if matched_channel in cctv_channels_need_supplement:
-                                filtered_programs[channel_name] = programs
-                                logger.info(f"  补充 {channel_name} 的节目单")
+                    if cctv_channels_need_supplement:
+                        logger.info(f"TVMao源第二阶段，抓取需要补充的CCTV频道")
+                        # 只抓取CCTV频道来补充
+                        cctv_programs = source_func('cctv')
+                        
+                        logger.info(f"TVMao源第二阶段，处理 {len(cctv_programs)} 个CCTV频道")
+                        # 查找TVMao源中对应的CCTV频道
+                        for channel_name, programs in cctv_programs.items():
+                            if (channel_name.startswith('CCTV') or channel_name.startswith('央视')):
+                                matched_channel = match_channel(channel_name)
+                                if matched_channel in cctv_channels_need_supplement:
+                                    filtered_programs[channel_name] = programs
+                                    logger.info(f"  补充 {channel_name} 的节目单")
                 
                 source_programs = filtered_programs
             else:
@@ -420,6 +430,11 @@ def main():
                     logger.debug(f"未找到匹配的频道: {channel_name}")
             
             logger.info(f"{source_name} 源匹配到 {len(standard_programs)} 个频道")
+            
+            # 记录cctv源匹配的频道数量
+            if source_name == 'cctv':
+                cctv_matched_count = len(standard_programs)
+                logger.info(f"CCTV源匹配频道数量: {cctv_matched_count}")
             
             # 合并到最终结果
             for channel_id, channel_data in standard_programs.items():
