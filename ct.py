@@ -36,7 +36,7 @@ CCTV_CHANNELS = {
 def get_cctv_epg(channel_id, date_str):
     api_url = os.environ.get('CCTV_API_URL')
     if not api_url:
-        logger.error("未找到CCTV_API_URL")
+        logger.error("未设置CCTV_API_URL")
         return None
 
     api_url = api_url.format(channel_id=channel_id, date_str=date_str)
@@ -49,7 +49,6 @@ def get_cctv_epg(channel_id, date_str):
         json_text = jsonp_text[jsonp_text.index('(') + 1:jsonp_text.rindex(')')]
         data = json.loads(json_text)
         
-        logger.info(f"成功获取{channel_id}的节目单数据")
         return data
     except Exception as e:
         logger.error(f"获取CCTV节目单失败: {e}")
@@ -111,14 +110,14 @@ def validate_date(date_str):
         return False
 
 def main():
-    """主函数"""
     logger.info("开始从CCTV API提取节目单...")
 
     parser = argparse.ArgumentParser(description='获取CCTV节目单并生成XMLTV格式')
     parser.add_argument('--date', type=str, help='指定日期，格式为YYYYMMDD，如20260120')
     args = parser.parse_args()
-
+    
     beijing_tz = timezone(timedelta(hours=8))
+
     now_beijing = datetime.now(beijing_tz)
 
     if args.date:
@@ -135,7 +134,6 @@ def main():
     programs_dict = {}
 
     for channel_id, channel_name in CCTV_CHANNELS.items():
-        logger.info(f"获取{channel_name}的节目单...")
         epg_data = get_cctv_epg(channel_id, target_date)
         
         if epg_data and 'data' in epg_data:
@@ -171,6 +169,7 @@ def fetch_cctv_programs():
     from datetime import timezone, timedelta
 
     beijing_tz = timezone(timedelta(hours=8))
+
     target_date = datetime.now(beijing_tz).strftime('%Y%m%d')
     
     programs_dict = {}
@@ -178,7 +177,6 @@ def fetch_cctv_programs():
     fail_count = 0
 
     for channel_id, channel_name in API_CCTV_CHANNELS.items():
-        logger.info(f"获取{channel_name}的节目单...")
         epg_data = api_get_cctv_epg(channel_id, target_date)
         
         if epg_data and 'data' in epg_data:
@@ -202,7 +200,7 @@ def fetch_cctv_programs():
 
         time.sleep(0.5)
     
-    logger.info(f"CCTV完成，成功获取到 {success_count} 个频道的节目单，{fail_count} 个频道失败")
+    logger.info(f"完成，成功获取到 {success_count} 个频道的节目单，{fail_count} 个频道失败")
     return programs_dict
 
 if __name__ == "__main__":

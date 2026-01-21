@@ -26,23 +26,19 @@ def make_request(url, session=None, headers=None, retry=3, delay=2):
             'Accept-Language': 'zh-CN,zh;q=0.8,en-US;q=0.5,en;q=0.3'
         }
     
-    # 检查Referer是否设置
     if 'Referer' in headers and not headers['Referer']:
         logger.error("找不到TM_REFERER")
         return None
-    
-    # 使用会话或直接请求
+
     request_func = session.get if session else requests.get
     
     for attempt in range(retry):
         try:
-            logger.info(f"请求URL: {url} (尝试 {attempt+1}/{retry})")
             response = request_func(url, headers=headers, timeout=15)
             response.raise_for_status()
-            logger.info(f"成功获取URL: {url}，状态码: {response.status_code}")
+            logger.info(f"成功获取URL，状态码: {response.status_code}")
             return response
         except requests.RequestException as e:
-            logger.warning(f"请求失败 (尝试 {attempt+1}/{retry}): {e}")
             if attempt < retry - 1:
                 logger.info(f"等待 {delay} 秒后重试...")
                 time.sleep(delay)
@@ -70,7 +66,6 @@ def generate_urls(channel_type, weekday=None):
         logger.error(f"不支持的频道类型: {channel_type}")
         return urls
     
-    # 检查URL前缀是否存在
     if not url_prefix:
         logger.error(f"未找到入口")
         return urls
@@ -83,12 +78,8 @@ def generate_urls(channel_type, weekday=None):
 
 def parse_program_item(item, channel_name):
     try:
-        # 提取时间和标题
-        
-        # 1. 尝试查找所有span元素，按顺序提取时间和标题
         spans = item.find_all('span')
         if len(spans) >= 2:
-            # 通常第一个span是时间，第二个是标题
             time_str = spans[0].text.strip()
             title = spans[1].text.strip()
             if time_str and title and ':' in time_str:
@@ -149,7 +140,6 @@ def fetch_program_items(soup):
     programs = []
     try:
         tables = soup.find_all('table')
-        logger.info(f"找到 {len(tables)} 个表格")
         processed_channels = set()
         for table in tables:
             rows = table.find_all('tr')
@@ -163,7 +153,6 @@ def fetch_program_items(soup):
                     if standard_channel_name in processed_channels:
                         continue
                     processed_channels.add(standard_channel_name)
-                    logger.info(f"处理频道: {standard_channel_name}")
                     for i, cell in enumerate(cells[1:], 2):
                         cell_text = cell.text.strip()
                         if not cell_text:
@@ -176,8 +165,6 @@ def fetch_program_items(soup):
                             pure_title = re.sub(r'\s+', ' ', pure_title)
                             if pure_title and start_time and end_time:
                                 programs.append((standard_channel_name, {'time': start_time, 'end_time': end_time, 'title': pure_title}))
-        
-        logger.info(f"成功解析 {len(programs)} 个节目")
     except Exception as e:
         logger.error(f"提取节目列表失败: {e}", exc_info=True)
     
@@ -186,47 +173,36 @@ def fetch_program_items(soup):
 def fetch_tvmao_programs(channel_type=None, weekday=None):
     programs_dict = {}
     
-    # 生成所有需要抓取的URL
-    # 如果没有指定channel_type，抓取所有类型
     if channel_type:
         urls = generate_urls(channel_type, weekday)
     else:
         urls = []
-        # 抓取所有类型：cctv和satellite
         urls.extend(generate_urls('cctv', weekday))
         urls.extend(generate_urls('satellite', weekday))
     
     if not urls:
         return programs_dict
-    
-    # 创建会话对象
+
     session = requests.Session()
-    
-    # 抓取每个URL
+
     for url in urls:
-        logger.info(f"正在抓取 {url}")
         response = make_request(url, session=session)
         
         if not response:
             continue
         
         soup = BeautifulSoup(response.text, 'html.parser')
-        
-        # 提取节目项
+
         program_items = fetch_program_items(soup)
-        
-        # 按频道分组
+
         for channel_name, program in program_items:
             if channel_name not in programs_dict:
                 programs_dict[channel_name] = []
             programs_dict[channel_name].append(program)
-        
-        # 添加适当延迟
+
         time.sleep(1)
     
-    # 去重和排序
     for channel_name in programs_dict:
-        # 1. 首先进行基本去重：使用时间和纯标题作为唯一标识
         seen = set()
         unique_programs = []
         
@@ -236,27 +212,21 @@ def fetch_tvmao_programs(channel_type=None, weekday=None):
                 seen.add(key)
                 unique_programs.append(prog)
         
-        # 2. 按时间排序
         unique_programs.sort(key=lambda x: x['time'])
         
-        # 3. 进一步优化：只保留每个时间点的一个节目（防止同一时间点多个节目）
         time_map = {}
         for prog in unique_programs:
-            # 只保留每个时间点的第一个节目
             if prog['time'] not in time_map:
                 time_map[prog['time']] = prog
         
         # 转换回列表
         time_unique_programs = list(time_map.values())
-        
-        # 4. 再次按时间排序
+
         time_unique_programs.sort(key=lambda x: x['time'])
         
-        # 5. 最后优化：限制每个频道每天的节目数量（最多48个，每小时2个）
-        max_programs = 48
+        max_programs = 60
         if len(time_unique_programs) > max_programs:
             logger.warning(f"频道 {channel_name} 节目数量过多 ({len(time_unique_programs)} 个)，限制为 {max_programs} 个")
-            # 只保留前48个节目（按时间排序后的）
             final_programs = time_unique_programs[:max_programs]
         else:
             final_programs = time_unique_programs
@@ -326,13 +296,11 @@ def main():
     logger.info("开始从tm提取节目单...")
     
     programs_dict = {}
-    
-    # 抓取央视节目单
+
     logger.info("=== 开始抓取央视节目单 ===")
     cctv_programs = fetch_tvmao_programs('cctv')
     programs_dict.update(cctv_programs)
-    
-    # 抓取卫视频道节目单
+
     logger.info("\n=== 开始抓取卫视频道节目单 ===")
     satellite_programs = fetch_tvmao_programs('satellite')
     programs_dict.update(satellite_programs)
@@ -340,10 +308,7 @@ def main():
     logger.info(f"\n共提取到 {len(programs_dict)} 个频道的节目单")
     
     if programs_dict:
-        # 生成XMLTV文件
         xmltv_content = generate_xmltv(programs_dict)
-        
-        # 保存到文件
         output_dir = 'output'
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
