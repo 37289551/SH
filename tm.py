@@ -36,7 +36,6 @@ def make_request(url, session=None, headers=None, retry=3, delay=2):
         try:
             response = request_func(url, headers=headers, timeout=15)
             response.raise_for_status()
-            logger.info(f"成功获取URL，状态码: {response.status_code}")
             return response
         except requests.RequestException as e:
             if attempt < retry - 1:
@@ -218,8 +217,7 @@ def fetch_tvmao_programs(channel_type=None, weekday=None):
         for prog in unique_programs:
             if prog['time'] not in time_map:
                 time_map[prog['time']] = prog
-        
-        # 转换回列表
+
         time_unique_programs = list(time_map.values())
 
         time_unique_programs.sort(key=lambda x: x['time'])
