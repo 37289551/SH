@@ -2,7 +2,7 @@ import requests
 import time
 from bs4 import BeautifulSoup
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import os
 import re
 

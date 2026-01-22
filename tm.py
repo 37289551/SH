@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import os
 import time
 import re
@@ -46,7 +46,8 @@ def make_request(url, session=None, headers=None, retry=3, delay=2):
                 return None
 
 def get_current_weekday():
-    return datetime.now().weekday() + 1
+    # 使用北京时间(UTC+8)获取当前星期几
+    return datetime.now(timezone(timedelta(hours=8))).weekday() + 1
 
 def generate_time_slots():
     return list(range(0, 24, 2))

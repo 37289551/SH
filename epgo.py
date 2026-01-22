@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
 import time
@@ -69,7 +69,8 @@ except ImportError as e:
     logger.error(f"导入ct模块失败: {e}")
 
 def generate_xmltv(programs_dict):
-    today = datetime.now().strftime('%Y%m%d')
+    # 使用北京时间(UTC+8)获取当天日期
+    today = datetime.now(timezone(timedelta(hours=8))).strftime('%Y%m%d')
 
     tv = ET.Element('tv')
     tv.set('generator-info-name', 'EPGO Generator')
