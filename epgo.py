@@ -80,6 +80,10 @@ def generate_xmltv(programs_dict):
         channel_name = channel_data['name']
         channel_programs = channel_data['programs']
 
+        # 将央视名称从"CCTV-X 频道名称"格式修改为"CCTV-X"格式
+        if channel_name.startswith('CCTV-'):
+            channel_name = channel_name.split(' ')[0]
+
         channel = ET.SubElement(tv, 'channel')
         channel.set('id', channel_id)
 
