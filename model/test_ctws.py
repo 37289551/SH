@@ -260,16 +260,19 @@ def main():
         print(f"\n=== 测试完整流程 ===")
         print("开始完整流程测试...")
         
-        # 加载频道列表
-        channels = ctws.load_channels_from_file('listofsource.txt')
-        print(f"✅ 加载了 {len(channels)} 个频道")
+        # 使用硬编码的测试频道数据，不依赖外部文件
+        test_channels_data = {
+            'CCTV-1': '600001859',
+            '江苏卫视': '600002521',
+            '湖南卫视': '600002475'
+        }
+        print(f"✅ 加载了 {len(test_channels_data)} 个测试频道")
         
-        # 测试前3个频道
-        test_channels = list(channels.items())[:3]
+        # 测试所有测试频道
         success_count = 0
         fail_count = 0
         
-        for channel_name, pid in test_channels:
+        for channel_name, pid in test_channels_data.items():
             print(f"\n正在测试 {channel_name}...")
             programs = ctws.get_epg_from_yangshipin(channel_name, pid, date_str)
             if programs:
