@@ -11,6 +11,7 @@ on:
         type: choice
         options:
           - model/test_ts.py
+          - model/ctws.py
           - model/test_tm.py
           - model/test_ct.py
           - model/test_epgo.py
