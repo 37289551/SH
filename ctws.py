@@ -236,7 +236,8 @@ def parse_program_time(time_value, date_str, timezone_obj):
                     hour = int(time_parts[0])
                     minute = int(time_parts[1])
                     date_obj = datetime.strptime(date_str, '%Y%m%d')
-                    return timezone_obj.localize(datetime(date_obj.year, date_obj.month, date_obj.day, hour, minute))
+                    # 直接创建带时区的 datetime 对象
+                    return datetime(date_obj.year, date_obj.month, date_obj.day, hour, minute, tzinfo=timezone_obj)
 
         return None
     except Exception as e:
