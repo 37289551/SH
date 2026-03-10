@@ -41,10 +41,49 @@ from channels import CHANNELS
 
 from channel_mapping import normalize_channel_name
 
+def fetch_ctws_programs():
+    """从 ctws 获取节目单数据"""
+    import ctws
+    from datetime import datetime, timezone, timedelta
+    
+    beijing_tz = timezone(timedelta(hours=8))
+    now_beijing = datetime.now(beijing_tz)
+    target_date = now_beijing.strftime('%Y%m%d')
+    
+    # 加载频道列表
+    channels = ctws.load_channels_from_file('listofsource.txt')
+    logger.info(f"CTWS 加载了 {len(channels)} 个频道")
+    
+    programs_dict = {}
+    
+    for channel_name, pid in channels.items():
+        programs = ctws.get_epg_from_yangshipin(channel_name, pid, target_date)
+        if programs:
+            # 转换为标准格式
+            standard_programs = []
+            for program in programs:
+                start_time = ctws.parse_program_time(program.get('startTime'), target_date, beijing_tz)
+                if start_time:
+                    time_str = start_time.strftime('%H:%M')
+                    title = program.get('title', '')
+                    standard_programs.append({'time': time_str, 'title': title})
+            
+            if standard_programs:
+                programs_dict[channel_name] = standard_programs
+                logger.info(f"CTWS 成功获取 {channel_name} 的节目单")
+        
+        # 避免请求过快
+        import time
+        time.sleep(0.5)
+    
+    logger.info(f"CTWS 完成，共获取 {len(programs_dict)} 个频道的节目单")
+    return programs_dict
+
 source_functions = {
     'tvsou': None,
     'tvmao': None,
-    'cctv': None
+    'cctv': None,
+    'ctws': None
 }
 
 try:
@@ -67,6 +106,13 @@ try:
     logger.info("成功导入ct模块")
 except ImportError as e:
     logger.error(f"导入ct模块失败: {e}")
+
+try:
+    import ctws
+    source_functions['ctws'] = fetch_ctws_programs
+    logger.info("成功导入ctws模块")
+except ImportError as e:
+    logger.error(f"导入ctws模块失败: {e}")
 
 def generate_xmltv(programs_dict):
     # 使用北京时间(UTC+8)获取当天日期
@@ -251,7 +297,8 @@ def main():
         sources = [
             ('tvsou', source_functions['tvsou']),
             ('tvmao', source_functions['tvmao']),
-            ('cctv', source_functions['cctv'])
+            ('cctv', source_functions['cctv']),
+            ('ctws', source_functions['ctws'])
         ]
 
     success_threshold = CONFIG.get('success_threshold', 80.0)

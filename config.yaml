@@ -6,6 +6,8 @@ sources:
     enabled: true
   - name: "tvmao"
     enabled: true
+  - name: "ctws"
+    enabled: true
   - name: "tvsou"
     enabled: false
 
