@@ -9,6 +9,7 @@ import re
 from datetime import datetime, timedelta, timezone
 import time
 import os
+import random
 from channel_mapping import normalize_channel_name
 
 # 配置日志
@@ -68,30 +69,24 @@ def make_request(url, session=None, headers=None, retry=3, delay=2):
             'Upgrade-Insecure-Requests': '1',
             'Sec-Fetch-Dest': 'document',
             'Sec-Fetch-Mode': 'navigate',
-            'Sec-Fetch-Site': 'none',
+            'Sec-Fetch-Site': 'same-origin',
             'Cache-Control': 'max-age=0',
             'Referer': 'https://www.tvmao.com/',
-            'DNT': '1'
+            'DNT': '1',
+            'Sec-Fetch-User': '?1',
+            'TE': 'trailers'
         }
     
     request_func = session.get if session else requests.get
     
     for attempt in range(retry):
         try:
+            # 随机延迟，避免请求过于规律
+            if attempt > 0:
+                time.sleep(delay * (attempt + 1) + random.uniform(0.5, 1.5))
+            
             response = request_func(url, headers=headers, timeout=15, allow_redirects=True)
             response.raise_for_status()
-            
-            # 检查是否被重定向到/ccp/路径
-            if '/ccp/' in response.url and '/ccp/' not in url:
-                logger.warning(f"检测到反爬虫重定向: {url} -> {response.url}")
-                if attempt < retry - 1:
-                    wait_time = delay * (attempt + 1)
-                    logger.info(f"等待 {wait_time} 秒后重试... ({attempt + 1}/{retry})")
-                    time.sleep(wait_time)
-                    continue
-                else:
-                    logger.error(f"所有重试均失败: {url}")
-                    return None
             
             # 检查响应体是否过小
             if len(response.text) < 500:
@@ -99,7 +94,6 @@ def make_request(url, session=None, headers=None, retry=3, delay=2):
                 if attempt < retry - 1:
                     wait_time = delay * (attempt + 1)
                     logger.info(f"等待 {wait_time} 秒后重试... ({attempt + 1}/{retry})")
-                    time.sleep(wait_time)
                     continue
                 else:
                     logger.error(f"所有重试均失败: {url}")
