@@ -19,9 +19,9 @@ file_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 file_handler.setFormatter(file_formatter)
 logger.addHandler(file_handler)
 
-B_PROGRAM = os.environ.get('B_PROGRAM', 'https://www.tvmao.com/program/')
-B_WS = os.environ.get('B_WS', 'https://www.tvmao.com/program_satellite/')
-TM_REFERER = os.environ.get('TM_REFERER', 'https://www.tvmao.com/')
+B_PROGRAM = os.environ['B_PROGRAM']
+B_WS = os.environ['B_WS']
+TM_REFERER = os.environ['TM_REFERER']
 
 CHANNEL_CODES = {
     'CCTV-1综合': 'CCTV-CCTV1',
@@ -512,3 +512,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
