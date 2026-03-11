@@ -1,12 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-电视猫新版频道EPG爬虫
-支持CCTV频道和卫视频道
-URL格式：
-- CCTV: https://www.tvmao.com/program/CCTV-{频道代号}-w3.html
-- 卫星: https://www.tvmao.com/program_satellite/{频道代号}-w3.html
-"""
 
 import requests
 from bs4 import BeautifulSoup
@@ -17,7 +10,6 @@ import time
 import os
 from channel_mapping import normalize_channel_name
 
-# 配置日志
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
@@ -27,7 +19,6 @@ file_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 file_handler.setFormatter(file_formatter)
 logger.addHandler(file_handler)
 
-# 频道代号映射（基于实际页面提取）
 CHANNEL_CODES = {
     # 央视频道
     'CCTV-1综合': 'CCTV-CCTV1',
@@ -58,7 +49,6 @@ CHANNEL_CODES = {
     'CGTN 俄语': 'CCTV-CCTVR',
     '中国电影频道北美版': 'CCTV-CHINA-MOVIE-CHANNEL-NA',
 
-    # 省级卫视
     '安徽卫视': 'AHTV1',
     '北京卫视': 'BTV1',
     '重庆卫视': 'CCQTV1',
@@ -99,7 +89,6 @@ CHANNEL_CODES = {
     '三沙卫视': 'SANSHATV',
     '延边卫视': 'YANBIAN1',
 
-    # 少儿/特色频道
     '卡酷少儿': 'BTV10',
     '金鹰卡通': 'HUNANTV2',
     '哈哈炫动': 'TOONMAX1',
@@ -132,10 +121,8 @@ def make_request(url, session=None, headers=None, retry=3, delay=2):
             response = request_func(url, headers=headers, timeout=15, allow_redirects=True)
             response.raise_for_status()
             
-            # 检查是否被重定向到/ccp/路径（反爬虫）
             if '/ccp/' in response.url and '/ccp/' not in url:
                 logger.warning(f"检测到反爬虫重定向: {url} -> {response.url}")
-                # 返回None表示需要重试
                 if attempt < retry - 1:
                     wait_time = delay * (attempt + 1)  # 递增等待时间
                     logger.info(f"等待 {wait_time} 秒后重试... ({attempt + 1}/{retry})")
@@ -144,8 +131,6 @@ def make_request(url, session=None, headers=None, retry=3, delay=2):
                 else:
                     logger.error(f"所有重试均失败: {url}")
                     return None
-            
-            # 检查响应体是否过小（可能是被拦截）
             if len(response.text) < 500:
                 logger.warning(f"响应体过小 ({len(response.text)} 字节), 可能被拦截: {url}")
                 if attempt < retry - 1:
@@ -168,41 +153,18 @@ def make_request(url, session=None, headers=None, retry=3, delay=2):
                 return None
 
 def get_current_weekday():
-    """获取当前星期几（北京时间UTC+8）"""
     return datetime.now(timezone(timedelta(hours=8))).weekday() + 1  # 1-7
 
 def generate_url(channel_code):
-    """
-    生成电视猫频道URL（使用当前星期几）
-
-    Args:
-        channel_code: 频道代号，如 'CCTV-CCTV2', 'AHTV1'
-
-    Returns:
-        完整的URL字符串
-    """
     return generate_url_with_weekday(channel_code)
 
 def generate_url_with_weekday(channel_code, weekday=None):
-    """
-    生成电视猫频道URL（支持指定星期几）
-
-    Args:
-        channel_code: 频道代号，如 'CCTV-CCTV2', 'AHTV1'
-        weekday: 星期几（1-7），默认为当前星期
-
-    Returns:
-        完整的URL字符串
-    """
     if weekday is None:
         weekday = get_current_weekday()
 
-    # 判断是CCTV频道还是卫视频道
     if channel_code.startswith('CCTV-'):
-        # CCTV频道格式：/program/CCTV-{code}-w{weekday}.html
         url = f"https://www.tvmao.com/program/{channel_code}-w{weekday}.html"
     else:
-        # 卫视频道格式：/program_satellite/{code}-w{weekday}.html
         url = f"https://www.tvmao.com/program_satellite/{channel_code}-w{weekday}.html"
     return url
 
@@ -212,10 +174,8 @@ def parse_channel_name(soup):
     h1_tag = soup.find('h1')
     if h1_tag:
         h1_text = h1_tag.get_text().strip()
-        # 格式: "安徽卫视节目表"
         logger.debug(f"H1标签内容: {h1_text}")
-        
-        # 提取"xxx卫视"或"xxx频道"
+
         match = re.search(r'([^，,_，节目表预告\s]+)(卫视|频道)', h1_text)
         if match:
             channel_name = match.group(0)
@@ -226,7 +186,6 @@ def parse_channel_name(soup):
     title_tag = soup.find('title')
     if title_tag:
         title_text = title_tag.get_text()
-        # 格式: "安徽卫视节目表,安徽卫视节目预告_电视猫"
         logger.debug(f"title标签内容: {title_text}")
         match = re.search(r'([^，,_，节目表预告\s]+)(卫视|频道)', title_text)
         if match:
@@ -253,13 +212,11 @@ def parse_channel_name(soup):
         match = re.search(pattern, all_text)
         if match:
             channel_name = match.group(0)
-            # 排除一些非频道名称的匹配
             if not any(x in channel_name for x in ['节目表', '节目预告', '电视猫', '卫视网']):
                 logger.info(f"从页面文本提取频道名称: {channel_name}")
                 return channel_name
     
     logger.warning("所有方法都无法提取频道名称")
-    # 调试输出页面结构
     if h1_tag:
         logger.warning(f"H1: {h1_tag}")
     if title_tag:
@@ -268,16 +225,9 @@ def parse_channel_name(soup):
     return None
 
 def parse_program_items(soup):
-    """
-    解析节目单数据
 
-    Returns:
-        列表，每个元素为包含时间、节目名称、集数的字典
-    """
     programs = []
 
-    # 优先使用精确的HTML结构解析
-    # 查找节目列表容器
     pgrow = soup.find('ul', id='pgrow')
 
     if pgrow:
@@ -627,3 +577,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
