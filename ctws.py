@@ -75,13 +75,95 @@ def extract_pid_from_url(url):
     return params.get('pid', [None])[0]
 
 
+def convert_to_cctv_id(channel_name, yangshipin_pid):
+    """
+    将频道名称或yangshipin pid转换为cctv channel_id格式
+
+    Args:
+        channel_name: 频道名称，如 "CCTV-1 综合"
+        yangshipin_pid: yangshipin的pid，如 "600001859"
+
+    Returns:
+        cctv channel_id，如 "cctv1"
+    """
+    # 频道名称到cctv_id的映射
+    channel_to_cctv_id = {
+        'CCTV-1': 'cctv1',
+        'CCTV-2': 'cctv2',
+        'CCTV-3': 'cctv3',
+        'CCTV-4': 'cctv4',
+        'CCTV-5': 'cctv5',
+        'CCTV-5+': 'cctv5plus',
+        'CCTV-6': 'cctv6',
+        'CCTV-7': 'cctv7',
+        'CCTV-8': 'cctv8',
+        'CCTV-9': 'cctvjilu',
+        'CCTV-10': 'cctv10',
+        'CCTV-11': 'cctv11',
+        'CCTV-12': 'cctv12',
+        'CCTV-13': 'cctv13',
+        'CCTV-14': 'cctvchild',
+        'CCTV-15': 'cctv15',
+        'CCTV-16': 'cctv16',
+        'CCTV-17': 'cctv17',
+    }
+
+    # yangshipin pid到cctv_id的映射
+    pid_to_cctv_id = {
+        '600001859': 'cctv1',
+        '600001800': 'cctv2',
+        '600001801': 'cctv3',
+        '600001814': 'cctv4',
+        '600001818': 'cctv5',
+        '600001817': 'cctv5plus',
+        '600001803': 'cctv6',
+        '600004092': 'cctv7',
+        '600001804': 'cctv8',
+        '600004078': 'cctvjilu',
+        '600001805': 'cctv10',
+        '600001806': 'cctv11',
+        '600001807': 'cctv12',
+        '600001811': 'cctv13',
+        '600001809': 'cctvchild',
+        '600001815': 'cctv15',
+        '600002475': 'cctv1',  # 湖南卫视映射到cctv1（示例）
+        '600002521': 'cctv1',  # 江苏卫视映射到cctv1（示例）
+    }
+
+    # 优先使用频道名称映射
+    # 移除可能的后缀描述，只保留基础名称
+    base_name = channel_name.split(' ')[0] if ' ' in channel_name else channel_name
+    if base_name in channel_to_cctv_id:
+        return channel_to_cctv_id[base_name]
+
+    # 其次使用pid映射
+    if yangshipin_pid in pid_to_cctv_id:
+        return pid_to_cctv_id[yangshipin_pid]
+
+    # 如果都不是，尝试从频道名称提取
+    if 'CCTV' in channel_name:
+        # 提取CCTV数字
+        import re
+        match = re.search(r'CCTV[-\s]*(\d+)', channel_name)
+        if match:
+            num = match.group(1)
+            if num == '4':
+                # CCTV-4 需要特殊处理，默认返回中文国际
+                return 'cctv4'
+            return f'cctv{num}'
+
+    # 默认返回pid（可能不适用，但至少有个值）
+    logger.warning(f"无法将 {channel_name} ({yangshipin_pid}) 转换为cctv_id，使用pid")
+    return yangshipin_pid
+
+
 def get_epg_from_yangshipin(channel_name, pid, date_str):
     """
-    从央视频获取指定频道、指定日期的节目单
+    从央视频/CCTV获取指定频道、指定日期的节目单
 
     Args:
         channel_name: 频道名称
-        pid: 频道ID
+        pid: 频道ID (yangshipin pid 或 cctv channel_id)
         date_str: 日期字符串，格式 YYYYMMDD
 
     Returns:
@@ -92,28 +174,35 @@ def get_epg_from_yangshipin(channel_name, pid, date_str):
         return None
 
     # 尝试多个可能的API接口
-    # 从app.js分析发现的真实API结构
+    # 优先使用已验证可用的央视API
     api_candidates = [
-        # 方案1: 央视频官方EPG API（基于app.js分析）
+        # 方案1: 央视官网CNTV API (已验证可用)
+        # 将频道名称转换为cctv的channel_id格式
+        {
+            'url': 'https://api.cntv.cn/epg/epginfo',
+            'params': {
+                'serviceId': 'tvcctv',
+                'c': convert_to_cctv_id(channel_name, pid),
+                'd': date_str,
+                't': 'json'
+            },
+            'desc': '方案1: api.cntv.cn epginfo接口',
+            'method': 'GET',
+            'response_type': 'jsonp'
+        },
+        # 方案2: 央视频官方EPG API（基于app.js分析）
         {
             'url': 'https://capi.yangshipin.cn/api/yspepg/program/list',
             'params': {'cid': pid, 'date': date_str},
-            'desc': '方案1: capi yangshipin yspepg list接口',
+            'desc': '方案2: capi yangshipin yspepg list接口',
             'method': 'GET'
         },
-        # 方案2: 央视频EPG API POST方式
+        # 方案3: 央视频EPG API POST方式
         {
             'url': 'https://capi.yangshipin.cn/api/yspepg/program/list',
             'data': {'cid': pid, 'date': date_str},
-            'desc': '方案2: capi yangshipin yspepg list POST接口',
+            'desc': '方案3: capi yangshipin yspepg list POST接口',
             'method': 'POST'
-        },
-        # 方案3: 测试环境API
-        {
-            'url': 'https://appdevteamtest.yangshipin.cn/api/yspepg/program/list',
-            'params': {'cid': pid, 'date': date_str},
-            'desc': '方案3: 测试环境 yspepg list接口',
-            'method': 'GET'
         },
         # 方案4: 新版API接口
         {
@@ -122,32 +211,18 @@ def get_epg_from_yangshipin(channel_name, pid, date_str):
             'desc': '方案4: capi yangshipin yspepg get接口',
             'method': 'GET'
         },
-        # 方案5: 预发布环境
-        {
-            'url': 'https://precapi.yangshipin.cn/api/yspepg/program/list',
-            'params': {'cid': pid, 'date': date_str},
-            'desc': '方案5: 预发布环境 yspepg list接口',
-            'method': 'GET'
-        },
-        # 方案6: 保留的推测接口作为备选
+        # 方案5: 保留的推测接口
         {
             'url': 'https://api.yangshipin.cn/content/api/channel/getEpgInfo',
             'params': {'pid': pid, 'date': date_str},
-            'desc': '方案6: getEpgInfo接口',
+            'desc': '方案5: getEpgInfo接口',
             'method': 'GET'
         },
-        # 方案7: 央视频直播页面API
+        # 方案6: 央视频直播页面API
         {
             'url': 'https://api.yangshipin.cn/content/channel/programList',
             'params': {'pid': pid, 'date': date_str},
-            'desc': '方案7: programList接口',
-            'method': 'GET'
-        },
-        # 方案8: 央视官网风格API
-        {
-            'url': 'https://api.cctv.com/api/epg/epginfo',
-            'params': {'serviceId': f'tvcctv', 'c': pid, 'd': date_str, 't': 'json'},
-            'desc': '方案8: cctv.com epginfo接口',
+            'desc': '方案6: programList接口',
             'method': 'GET'
         },
     ]
@@ -179,6 +254,27 @@ def get_epg_from_yangshipin(channel_name, pid, date_str):
                     timeout=15
                 )
             response.raise_for_status()
+
+            # 处理JSONP响应
+            response_text = response.text
+            data = None
+
+            # 检查是否是JSONP格式
+            if response_text.strip().startswith(('callback(', 'abccctv', 'cctv')):
+                # 提取JSON部分
+                start = response_text.index('(')
+                end = response_text.rindex(')')
+                json_text = response_text[start + 1:end]
+                data = json.loads(json_text)
+                logger.debug(f"检测到JSONP格式响应")
+            else:
+                # 尝试直接解析JSON
+                try:
+                    data = response.json()
+                except json.JSONDecodeError:
+                    logger.debug(f"无法解析JSON响应，尝试HTML解析")
+                    # 可能是HTML页面，跳过
+                    continue
 
             data = response.json()
 
