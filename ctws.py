@@ -1,38 +1,20 @@
 #!/usr/bin/env python3
 """
-央视频(yangshipin.cn) EPG 提取工具
-从 yangshipin.cn 页面提取当天节目单信息
+央视频卫视频道 EPG 提取工具
+从 yangshipin.cn 提取各省级卫视频道的EPG节目单
 """
 
 import requests
 import gzip
 import json
-import re
 from datetime import datetime, timezone, timedelta
-from urllib.parse import urlparse, parse_qs
 import logging
 
 logger = logging.getLogger(__name__)
 
-# 频道ID映射：从频道名称到 yangshipin 的 pid
-CHANNEL_PID_MAP = {
-    'CCTV-1': '600001859',
-    'CCTV-2': '600001800',
-    'CCTV-3': '600001801',
-    'CCTV-4': '600001814',
-    'CCTV-5': '600001818',
-    'CCTV-5+': '600001817',
-    'CCTV-6': '600001803',
-    'CCTV-7': '600004092',
-    'CCTV-8': '600001804',
-    'CCTV-9': '600004078',
-    'CCTV-10': '600001805',
-    'CCTV-11': '600001806',
-    'CCTV-12': '600001807',
-    'CCTV-13': '600001811',
-    'CCTV-14': '600001809',
-    'CCTV-15': '600001815',
-    'CETV-1': '600171827',
+# 卫视频道ID映射：从频道名称到 yangshipin 的 pid
+# 这些PID已经验证，对应正确的央视频频道页面
+SATELLITE_CHANNELS = {
     '湖南卫视': '600002475',
     '浙江卫视': '600002520',
     '江苏卫视': '600002521',
@@ -68,102 +50,13 @@ CHANNEL_PID_MAP = {
 }
 
 
-def extract_pid_from_url(url):
-    """从 yangshipin.cn URL 中提取 pid 参数"""
-    parsed = urlparse(url)
-    params = parse_qs(parsed.query)
-    return params.get('pid', [None])[0]
-
-
-def convert_to_cctv_id(channel_name, yangshipin_pid):
-    """
-    将频道名称或yangshipin pid转换为cctv channel_id格式
-
-    Args:
-        channel_name: 频道名称，如 "CCTV-1 综合"
-        yangshipin_pid: yangshipin的pid，如 "600001859"
-
-    Returns:
-        cctv channel_id，如 "cctv1"
-    """
-    # 频道名称到cctv_id的映射
-    channel_to_cctv_id = {
-        'CCTV-1': 'cctv1',
-        'CCTV-2': 'cctv2',
-        'CCTV-3': 'cctv3',
-        'CCTV-4': 'cctv4',
-        'CCTV-5': 'cctv5',
-        'CCTV-5+': 'cctv5plus',
-        'CCTV-6': 'cctv6',
-        'CCTV-7': 'cctv7',
-        'CCTV-8': 'cctv8',
-        'CCTV-9': 'cctvjilu',
-        'CCTV-10': 'cctv10',
-        'CCTV-11': 'cctv11',
-        'CCTV-12': 'cctv12',
-        'CCTV-13': 'cctv13',
-        'CCTV-14': 'cctvchild',
-        'CCTV-15': 'cctv15',
-        'CCTV-16': 'cctv16',
-        'CCTV-17': 'cctv17',
-    }
-
-    # yangshipin pid到cctv_id的映射
-    pid_to_cctv_id = {
-        '600001859': 'cctv1',
-        '600001800': 'cctv2',
-        '600001801': 'cctv3',
-        '600001814': 'cctv4',
-        '600001818': 'cctv5',
-        '600001817': 'cctv5plus',
-        '600001803': 'cctv6',
-        '600004092': 'cctv7',
-        '600001804': 'cctv8',
-        '600004078': 'cctvjilu',
-        '600001805': 'cctv10',
-        '600001806': 'cctv11',
-        '600001807': 'cctv12',
-        '600001811': 'cctv13',
-        '600001809': 'cctvchild',
-        '600001815': 'cctv15',
-        '600002475': 'cctv1',  # 湖南卫视映射到cctv1（示例）
-        '600002521': 'cctv1',  # 江苏卫视映射到cctv1（示例）
-    }
-
-    # 优先使用频道名称映射
-    # 移除可能的后缀描述，只保留基础名称
-    base_name = channel_name.split(' ')[0] if ' ' in channel_name else channel_name
-    if base_name in channel_to_cctv_id:
-        return channel_to_cctv_id[base_name]
-
-    # 其次使用pid映射
-    if yangshipin_pid in pid_to_cctv_id:
-        return pid_to_cctv_id[yangshipin_pid]
-
-    # 如果都不是，尝试从频道名称提取
-    if 'CCTV' in channel_name:
-        # 提取CCTV数字
-        import re
-        match = re.search(r'CCTV[-\s]*(\d+)', channel_name)
-        if match:
-            num = match.group(1)
-            if num == '4':
-                # CCTV-4 需要特殊处理，默认返回中文国际
-                return 'cctv4'
-            return f'cctv{num}'
-
-    # 默认返回pid（可能不适用，但至少有个值）
-    logger.warning(f"无法将 {channel_name} ({yangshipin_pid}) 转换为cctv_id，使用pid")
-    return yangshipin_pid
-
-
 def get_epg_from_yangshipin(channel_name, pid, date_str):
     """
-    从央视频/CCTV获取指定频道、指定日期的节目单
+    从央视频获取指定卫视频道、指定日期的节目单
 
     Args:
-        channel_name: 频道名称
-        pid: 频道ID (yangshipin pid 或 cctv channel_id)
+        channel_name: 频道名称（如"湖南卫视"）
+        pid: yangshipin pid（如"600002475"）
         date_str: 日期字符串，格式 YYYYMMDD
 
     Returns:
@@ -173,56 +66,41 @@ def get_epg_from_yangshipin(channel_name, pid, date_str):
         logger.warning(f"频道 {channel_name} 没有 pid，跳过")
         return None
 
-    # 尝试多个可能的API接口
-    # 优先使用已验证可用的央视API
+    # 尝试多个可能的API接口（专门用于卫视频道）
     api_candidates = [
-        # 方案1: 央视官网CNTV API (已验证可用)
-        # 将频道名称转换为cctv的channel_id格式
-        {
-            'url': 'https://api.cntv.cn/epg/epginfo',
-            'params': {
-                'serviceId': 'tvcctv',
-                'c': convert_to_cctv_id(channel_name, pid),
-                'd': date_str,
-                't': 'json'
-            },
-            'desc': '方案1: api.cntv.cn epginfo接口',
-            'method': 'GET',
-            'response_type': 'jsonp'
-        },
-        # 方案2: 央视频官方EPG API（基于app.js分析）
+        # 方案1: 央视频官方EPG API
         {
             'url': 'https://capi.yangshipin.cn/api/yspepg/program/list',
             'params': {'cid': pid, 'date': date_str},
-            'desc': '方案2: capi yangshipin yspepg list接口',
+            'desc': '方案1: capi.yangshipin.cn program/list',
             'method': 'GET'
         },
-        # 方案3: 央视频EPG API POST方式
+        # 方案2: POST方式调用
         {
             'url': 'https://capi.yangshipin.cn/api/yspepg/program/list',
             'data': {'cid': pid, 'date': date_str},
-            'desc': '方案3: capi yangshipin yspepg list POST接口',
+            'desc': '方案2: capi.yangshipin.cn program/list POST',
             'method': 'POST'
         },
-        # 方案4: 新版API接口
+        # 方案3: 使用get接口
         {
             'url': 'https://capi.yangshipin.cn/api/yspepg/program/get',
             'params': {'cid': pid, 'date': date_str},
-            'desc': '方案4: capi yangshipin yspepg get接口',
+            'desc': '方案3: capi.yangshipin.cn program/get',
             'method': 'GET'
         },
-        # 方案5: 保留的推测接口
+        # 方案4: 尝试content API
         {
             'url': 'https://api.yangshipin.cn/content/api/channel/getEpgInfo',
             'params': {'pid': pid, 'date': date_str},
-            'desc': '方案5: getEpgInfo接口',
+            'desc': '方案4: content.api getEpgInfo',
             'method': 'GET'
         },
-        # 方案6: 央视频直播页面API
+        # 方案5: 尝试channel API
         {
             'url': 'https://api.yangshipin.cn/content/channel/programList',
             'params': {'pid': pid, 'date': date_str},
-            'desc': '方案6: programList接口',
+            'desc': '方案5: content channel programList',
             'method': 'GET'
         },
     ]
@@ -238,7 +116,6 @@ def get_epg_from_yangshipin(channel_name, pid, date_str):
         try:
             logger.debug(f"尝试 {api_config['desc']}: {api_config['url']}")
 
-            # 根据配置选择请求方法
             if api_config.get('method') == 'POST':
                 response = requests.post(
                     api_config['url'],
@@ -255,28 +132,15 @@ def get_epg_from_yangshipin(channel_name, pid, date_str):
                 )
             response.raise_for_status()
 
-            # 处理JSONP响应
             response_text = response.text
-            data = None
 
-            # 检查是否是JSONP格式
-            if response_text.strip().startswith(('callback(', 'abccctv', 'cctv')):
-                # 提取JSON部分
-                start = response_text.index('(')
-                end = response_text.rindex(')')
-                json_text = response_text[start + 1:end]
-                data = json.loads(json_text)
-                logger.debug(f"检测到JSONP格式响应")
-            else:
-                # 尝试直接解析JSON
-                try:
-                    data = response.json()
-                except json.JSONDecodeError:
-                    logger.debug(f"无法解析JSON响应，尝试HTML解析")
-                    # 可能是HTML页面，跳过
-                    continue
-
-            data = response.json()
+            # 尝试解析JSON
+            try:
+                data = response.json()
+            except json.JSONDecodeError:
+                # 可能是HTML页面
+                logger.debug(f"{api_config['desc']} 返回非JSON响应: {response_text[:200]}")
+                continue
 
             # 检查各种可能的响应结构
             programs = None
@@ -284,7 +148,7 @@ def get_epg_from_yangshipin(channel_name, pid, date_str):
             # 检查1: 标准的 programList 结构
             if 'data' in data and 'programList' in data['data']:
                 programs = data['data']['programList']
-                logger.debug(f"找到 programList 结构")
+                logger.debug(f"找到 data.programList 结构")
 
             # 检查2: 直接的 programList 结构
             elif 'programList' in data:
@@ -294,7 +158,7 @@ def get_epg_from_yangshipin(channel_name, pid, date_str):
             # 检查3: dataList 结构（央视频标准）
             elif 'data' in data and 'dataList' in data['data']:
                 programs = data['data']['dataList']
-                logger.debug(f"找到 dataList 结构")
+                logger.debug(f"找到 data.dataList 结构")
 
             # 检查4: 直接 dataList 结构
             elif 'dataList' in data:
@@ -390,7 +254,7 @@ def generate_xmltv(programs_dict, target_date):
     beijing_tz = timezone(timedelta(hours=8))
 
     xml_content = f'''<?xml version="1.0" encoding="UTF-8"?>
-<tv generator-info-name="Yangshipin EPG Generator" generator-info-url="https://yangshipin.cn">
+<tv generator-info-name="Yangshipin Satellite EPG Generator" generator-info-url="https://yangshipin.cn">
 '''
 
     total_programs = 0
@@ -520,8 +384,9 @@ def load_channels_from_file(file_path):
                     yangshipin_url = parts[1].strip()
 
                     if yangshipin_url:
-                        pid = extract_pid_from_url(yangshipin_url)
-                        if pid:
+                        # 从URL中提取pid
+                        if '?pid=' in yangshipin_url:
+                            pid = yangshipin_url.split('?pid=')[1].split('&')[0]
                             channels[channel_name] = pid
                             logger.debug(f"加载频道: {channel_name} -> {pid}")
                     else:
@@ -536,11 +401,12 @@ def load_channels_from_file(file_path):
 def main():
     import argparse
 
-    parser = argparse.ArgumentParser(description='从央视频提取EPG节目单')
+    parser = argparse.ArgumentParser(description='从央视频提取卫视EPG节目单')
     parser.add_argument('--channels', default='listofsource.txt', help='频道列表文件路径')
-    parser.add_argument('--date', type=str, help='指定日期，格式为YYYYMMDD，如20260128')
-    parser.add_argument('--output', default='yangshipin_epg.xml', help='输出文件路径')
+    parser.add_argument('--date', type=str, help='指定日期，格式为YYYYMMDD，如20260311')
+    parser.add_argument('--output', default='yangshipin_satellite_epg.xml', help='输出文件路径')
     parser.add_argument('--gzip', action='store_true', help='输出为gzip压缩格式')
+    parser.add_argument('--list-channels', action='store_true', help='列出所有支持的卫视频道')
 
     args = parser.parse_args()
 
@@ -549,6 +415,14 @@ def main():
         level=logging.INFO,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
+
+    # 如果请求列出频道
+    if args.list_channels:
+        print("支持的卫视频道：")
+        for channel_name, pid in SATELLITE_CHANNELS.items():
+            print(f"  {channel_name}: {pid}")
+            print(f"    URL: https://yangshipin.cn/tv/home?pid={pid}")
+        return
 
     # 确定目标日期
     beijing_tz = timezone(timedelta(hours=8))
@@ -562,8 +436,13 @@ def main():
         logger.info(f"使用当前日期: {target_date}")
 
     # 加载频道列表
+    # 优先使用文件，如果文件不存在或为空，使用内置的SATELLITE_CHANNELS
     channels = load_channels_from_file(args.channels)
-    logger.info(f"加载了 {len(channels)} 个频道")
+    if not channels:
+        logger.warning(f"未从文件加载到频道，使用内置频道列表")
+        channels = SATELLITE_CHANNELS
+
+    logger.info(f"加载了 {len(channels)} 个卫视频道")
 
     # 获取所有频道的节目单
     programs_dict = {}
@@ -571,6 +450,11 @@ def main():
     fail_count = 0
 
     for channel_name, pid in channels.items():
+        # 只处理卫视，跳过CCTV频道
+        if 'CCTV' in channel_name:
+            logger.debug(f"跳过CCTV频道: {channel_name}")
+            continue
+
         programs = get_epg_from_yangshipin(channel_name, pid, target_date)
 
         if programs:
