@@ -14,6 +14,7 @@ on:
           - model/test_tm2.py
           - model/test_ct.py
           - model/test_epgo.py
+          - model/test_tmdf.py
 
 jobs:
   test-source:
