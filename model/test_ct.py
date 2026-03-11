@@ -8,10 +8,11 @@ from datetime import datetime
 import json
 import tempfile
 
-# 添加当前目录到Python路径
+# 添加当前目录和code目录到Python路径
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'code'))
 
-# 导入新的CCTV API模块
+# 从code目录导入capi模块
 from capi import get_cctv_epg, generate_xmltv, CCTV_CHANNELS, validate_date
 
 def test_api_call(channel_id, date_str):

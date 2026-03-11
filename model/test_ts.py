@@ -9,10 +9,11 @@ import sys
 import os
 from datetime import datetime
 
-# 添加当前目录到Python路径
+# 添加当前目录和code目录到Python路径
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'code'))
 
-from tvsou_epg import fetch_tvsou_programs, generate_xmltv
+from ts import fetch_tvsou_programs, generate_xmltv
 
 def main():
     """主函数"""
