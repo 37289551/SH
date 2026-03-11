@@ -8,6 +8,8 @@ sources:
     enabled: true
   - name: "difang"
     enabled: true
+  - name: "tm2"
+    enabled: true
 
 # 成功率阈值配置：达到该阈值则停止后续源调用
 success_threshold: 80.0
