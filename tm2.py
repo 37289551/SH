@@ -114,20 +114,55 @@ def make_request(url, session=None, headers=None, retry=3, delay=2):
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
             'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
-            'Referer': 'https://www.tvmao.com/'
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
+            'Sec-Fetch-Dest': 'document',
+            'Sec-Fetch-Mode': 'navigate',
+            'Sec-Fetch-Site': 'none',
+            'Cache-Control': 'max-age=0',
+            'Referer': 'https://www.tvmao.com/',
+            'DNT': '1'
         }
     
     request_func = session.get if session else requests.get
     
     for attempt in range(retry):
         try:
-            response = request_func(url, headers=headers, timeout=15)
+            response = request_func(url, headers=headers, timeout=15, allow_redirects=True)
             response.raise_for_status()
+            
+            # 检查是否被重定向到/ccp/路径（反爬虫）
+            if '/ccp/' in response.url and '/ccp/' not in url:
+                logger.warning(f"检测到反爬虫重定向: {url} -> {response.url}")
+                # 返回None表示需要重试
+                if attempt < retry - 1:
+                    wait_time = delay * (attempt + 1)  # 递增等待时间
+                    logger.info(f"等待 {wait_time} 秒后重试... ({attempt + 1}/{retry})")
+                    time.sleep(wait_time)
+                    continue
+                else:
+                    logger.error(f"所有重试均失败: {url}")
+                    return None
+            
+            # 检查响应体是否过小（可能是被拦截）
+            if len(response.text) < 500:
+                logger.warning(f"响应体过小 ({len(response.text)} 字节), 可能被拦截: {url}")
+                if attempt < retry - 1:
+                    wait_time = delay * (attempt + 1)
+                    logger.info(f"等待 {wait_time} 秒后重试... ({attempt + 1}/{retry})")
+                    time.sleep(wait_time)
+                    continue
+                else:
+                    logger.error(f"所有重试均失败: {url}")
+                    return None
+            
             return response
         except requests.RequestException as e:
             if attempt < retry - 1:
-                logger.info(f"等待 {delay} 秒后重试... ({attempt + 1}/{retry})")
-                time.sleep(delay)
+                wait_time = delay * (attempt + 1)
+                logger.info(f"等待 {wait_time} 秒后重试... ({attempt + 1}/{retry}), 错误: {e}")
+                time.sleep(wait_time)
             else:
                 logger.error(f"所有重试均失败: {url}, 错误: {e}")
                 return None
@@ -235,63 +270,108 @@ def parse_channel_name(soup):
 def parse_program_items(soup):
     """
     解析节目单数据
-    
+
     Returns:
         列表，每个元素为包含时间、节目名称、集数的字典
     """
     programs = []
-    
-    # 查找所有包含节目的li元素
-    # 根据网页结构，节目通常在class包含"program"或"item"的容器中
-    li_elements = soup.find_all('li')
-    
-    logger.debug(f"找到 {len(li_elements)} 个 <li> 元素")
-    
-    for i, li in enumerate(li_elements):
-        text = li.get_text().strip()
-        if not text:
-            continue
-        
-        # 跳过明显不是节目的内容
-        if len(text) < 5:
-            continue
-        
-        # 跳过时间段分组标题（如"凌晨节目"、"午间节目"、"晚间节目"等）
-        if any(x in text for x in ['节目', '播出', '时段', '节目表']):
-            continue
-        
-        # 使用正则表达式匹配节目信息
-        # 格式: "HH:MM 节目名称(集数)" 或 "HH:MM 节目名称"
-        pattern = r'^(\d{2}:\d{2})\s+(.+?)(?:\((\d+)\))?$'
-        match = re.match(pattern, text)
-        
-        if match:
-            time_str = match.group(1)
-            title = match.group(2).strip()
-            episode = match.group(3) if match.group(3) else None
-            
-            # 清理标题中的多余内容
+
+    # 优先使用精确的HTML结构解析
+    # 查找节目列表容器
+    pgrow = soup.find('ul', id='pgrow')
+
+    if pgrow:
+        # 使用精确结构解析
+        li_elements = pgrow.find_all('li')
+        logger.debug(f"使用精确结构解析，找到 {len(li_elements)} 个节目项")
+
+        for li in li_elements:
+            # 提取时间
+            am_span = li.find('span', class_='am')
+            if not am_span:
+                continue
+
+            time_str = am_span.get_text().strip()
+            # 验证时间格式
+            if not re.match(r'^\d{2}:\d{2}$', time_str):
+                continue
+
+            # 提取节目名称
+            p_show_span = li.find('span', class_='p_show')
+            if not p_show_span:
+                continue
+
+            # 获取节目名文本
+            title = p_show_span.get_text().strip()
+            # 清理标题中的多余空格
             title = re.sub(r'\s+', ' ', title)
-            title = re.sub(r'^正在播出\s+', '', title)
-            
-            programs.append({
-                'time': time_str,
-                'title': title,
-                'episode': episode
-            })
-            
-            logger.debug(f"解析到节目 {i+1}: {time_str} - {title}")
-    
+
+            # 提取集数（如果有）
+            episode = None
+            # 检查是否有括号标记的集数，如(9)
+            episode_match = re.search(r'\((\d+)\)$', title)
+            if episode_match:
+                episode = episode_match.group(1)
+                title = re.sub(r'\(\d+\)$', '', title).strip()
+
+            if title and len(title) > 0:
+                programs.append({
+                    'time': time_str,
+                    'title': title,
+                    'episode': episode
+                })
+                logger.debug(f"解析到节目: {time_str} - {title}{f'({episode})' if episode else ''}")
+    else:
+        # 回退方案：使用原有通用解析
+        logger.debug("未找到精确结构，使用通用解析")
+        li_elements = soup.find_all('li')
+        logger.debug(f"找到 {len(li_elements)} 个 <li> 元素")
+
+        for i, li in enumerate(li_elements):
+            text = li.get_text().strip()
+            if not text:
+                continue
+
+            # 跳过明显不是节目的内容
+            if len(text) < 5:
+                continue
+
+            # 跳过时间段分组标题
+            if any(x in text for x in ['节目', '播出', '时段', '节目表']):
+                continue
+
+            # 使用正则表达式匹配节目信息
+            pattern = r'^(\d{2}:\d{2})\s+(.+?)(?:\((\d+)\))?$'
+            match = re.match(pattern, text)
+
+            if match:
+                time_str = match.group(1)
+                title = match.group(2).strip()
+                episode = match.group(3) if match.group(3) else None
+
+                # 清理标题
+                title = re.sub(r'\s+', ' ', title)
+                title = re.sub(r'^正在播出\s+', '', title)
+
+                programs.append({
+                    'time': time_str,
+                    'title': title,
+                    'episode': episode
+                })
+
+                logger.debug(f"解析到节目 {i+1}: {time_str} - {title}")
+
     logger.info(f"共解析到 {len(programs)} 个节目")
     return programs
 
-def fetch_channel_epg(channel_code, weekday=None):
+def fetch_channel_epg(channel_code, weekday=None, session=None):
     """
     获取指定频道的EPG数据
 
     Args:
         channel_code: 频道代号
         weekday: 星期几（1-7），默认为当前星期
+        session: requests.Session对象，用于保持Cookie
 
     Returns:
         字典，包含频道名称和节目列表
@@ -299,7 +379,7 @@ def fetch_channel_epg(channel_code, weekday=None):
     url = generate_url_with_weekday(channel_code, weekday)
     logger.info(f"正在获取: {url}")
 
-    response = make_request(url)
+    response = make_request(url, session=session)
     if not response:
         logger.warning(f"获取失败: {channel_code}")
         return None
@@ -345,17 +425,35 @@ def fetch_all_satellite_epg(channel_list=None, weekday=None):
     total_channels = len(channel_list)
     logger.info(f"开始获取 {total_channels} 个卫视频道的EPG数据")
 
+    # 创建Session以保持Cookie
+    session = requests.Session()
+    session.headers.update({
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+        'Referer': 'https://www.tvmao.com/',
+        'Connection': 'keep-alive'
+    })
+
+    # 先访问首页建立会话
+    try:
+        session.get('https://www.tvmao.com/', timeout=10)
+        logger.info("已访问首页建立会话")
+    except Exception as e:
+        logger.warning(f"访问首页失败: {e}")
+
     success_count = 0
     for channel_name, channel_code in channel_list.items():
-        epg_data = fetch_channel_epg(channel_code, weekday)
+        epg_data = fetch_channel_epg(channel_code, weekday, session=session)
 
         if epg_data and epg_data['programs']:
             programs_dict[epg_data['channel']] = epg_data['programs']
             success_count += 1
 
-        # 避免请求过快
-        time.sleep(0.5)
+        # 增加请求间隔，避免被识别为爬虫
+        time.sleep(2 + (hash(channel_code) % 3))  # 2-4秒随机间隔
 
+    session.close()
     logger.info(f"完成！成功获取 {success_count}/{total_channels} 个频道的EPG数据")
     return programs_dict
 
