@@ -31,7 +31,9 @@ jobs:
         TM_SATELLITE: ${{ secrets.TM_SATELLITE }}
         TM_REFERER: ${{ secrets.TM_REFERER }}
         TM_GENERATOR_URL: ${{ secrets.TM_GENERATOR_URL }}
-      run: python epgo.py
+        B_PROGRAM: ${{ secrets.B_PROGRAM }}
+        B_WS: ${{ secrets.B_WS }}
+      run: python code/epgo.py
     
     - name: 记录运行结果
       run: |

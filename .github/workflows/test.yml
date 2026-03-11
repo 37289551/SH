@@ -10,11 +10,11 @@ on:
         default: 'model/test_ts.py'
         type: choice
         options:
-          - model/test_ts.py
           - model/test_tm2.py
+          - model/test_tm.py
           - model/test_ct.py
-          - model/test_epgo.py
           - model/test_tmdf.py
+          - model/test_epgo.py
 
 jobs:
   test-source:
@@ -48,6 +48,8 @@ jobs:
         TM_SATELLITE: ${{ secrets.TM_SATELLITE }}
         TM_REFERER: ${{ secrets.TM_REFERER }}
         TM_GENERATOR_URL: ${{ secrets.TM_GENERATOR_URL }}
+        B_PROGRAM: ${{ secrets.B_PROGRAM }}
+        B_WS: ${{ secrets.B_WS }}
       run: python ${{ inputs.test_script }}
     
     # 5. 上传生成的节目单文件（如果有）
