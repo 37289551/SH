@@ -258,11 +258,12 @@ def parse_program_items(soup):
         logger.debug(f"使用精确结构解析，找到 {len(li_elements)} 个节目项")
 
         for li in li_elements:
-            am_span = li.find('span', class_='am')
-            if not am_span:
+            # 同时查找上午和下午的时间标记
+            time_span = li.find('span', class_='am') or li.find('span', class_='pm')
+            if not time_span:
                 continue
 
-            time_str = am_span.get_text().strip()
+            time_str = time_span.get_text().strip()
             if not re.match(r'^\d{2}:\d{2}$', time_str):
                 continue
 
