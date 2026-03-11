@@ -82,7 +82,8 @@ def fetch_ctws_programs():
 source_functions = {
     'cctv': None,
     'weishi': None,
-    'difang': None
+    'difang': None,
+    'tm2': None
 }
 
 try:
@@ -431,3 +432,4 @@ if __name__ == "__main__":
         print(f"Error: {e}")
 
         traceback.print_exc()
+
