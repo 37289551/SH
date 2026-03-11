@@ -17,8 +17,8 @@ file_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 file_handler.setFormatter(file_formatter)
 logger.addHandler(file_handler)
 
-B_PROGRAM = os.environ.get('B_PROGRAM', 'https://www.tvmao.com/program/')
-TM_REFERER = os.environ.get('TM_REFERER', 'https://www.tvmao.com/')
+B_PROGRAM = os.environ['B_PROGRAM']
+TM_REFERER = os.environ['TM_REFERER']
 
 PROVINCE_CODES = {
     '天津': {'code': 'TJTV', 'provId': '120000'},
@@ -488,3 +488,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
