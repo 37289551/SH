@@ -130,10 +130,8 @@ def generate_url_with_weekday(province_code, weekday=None):
     Returns:
         完整的URL字符串
     """
-    if weekday is None:
-        weekday = get_current_weekday()
-    
-    url = f"https://www.tvmao.com/program/{province_code}-w{weekday}.html"
+    # 直接使用省份代码，不需要星期几参数
+    url = f"https://www.tvmao.com/program/{province_code}"
     return url
 
 def parse_channel_list(soup, province_name):
@@ -163,9 +161,9 @@ def parse_channel_list(soup, province_name):
                 text = link.get_text().strip()
                 
                 # 提取频道代码
-                # 例如: /program/JSTV-JSTV3-w3.html -> JSTV-JSTV3
+                # 例如: /program/JSTV-JSTV3-w3.html -> JSTV-JSTV3-w3.html
                 # 只处理带连字符的代码，跳过卫视频道
-                match = re.search(r'/program[^/]*?/([A-Za-z0-9_-]+)-w\d+\.html', href)
+                match = re.search(r'/program[^/]*?/([A-Za-z0-9_-]+-w\d+\.html)', href)
                 if not match:
                     continue
 
@@ -198,7 +196,7 @@ def parse_channel_list(soup, province_name):
             title = link.get('title', '')
             text = link.get_text().strip()
 
-            match = re.search(r'/program[^/]*?/([A-Za-z0-9_-]+)-w\d+\.html', href)
+            match = re.search(r'/program[^/]*?/([A-Za-z0-9_-]+-w\d+\.html)', href)
             if not match:
                 continue
 
@@ -384,7 +382,7 @@ def fetch_province_epg(province_name, weekday=None, session=None):
     if weekday is None:
         weekday = get_current_weekday()
     
-    url = f"https://www.tvmao.com/program/{province_code}-w{weekday}.html"
+    url = f"https://www.tvmao.com/program/{province_code}"
     logger.info(f"正在获取 {province_name} 的EPG数据: {url}")
 
     response = make_request(url, session=session)
@@ -406,8 +404,8 @@ def fetch_province_epg(province_name, weekday=None, session=None):
     # 遍历每个频道获取EPG
     # channel_list中的都是带连字符的地方频道，直接使用/program/前缀
     for channel_name, channel_code in channel_list.items():
-        # 地方频道格式: JSTV-JSTV3 -> /program/JSTV-JSTV3-w3.html
-        channel_url = f"https://www.tvmao.com/program/{channel_code}-w{weekday}.html"
+        # 地方频道格式: JSTV-JSTV2-w3.html -> /program/JSTV-JSTV2-w3.html
+        channel_url = f"https://www.tvmao.com/program/{channel_code}"
         
         logger.debug(f"获取频道 {channel_name} 的EPG: {channel_url}")
         
