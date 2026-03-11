@@ -16,8 +16,13 @@ def main():
     print("=== TM2卫视频道测试 ===")
     print(f"开始时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print()
-    
+
     try:
+        # 获取当前星期几
+        current_weekday = tm2.get_current_weekday()
+        print(f"当前星期: {current_weekday}")
+        print()
+
         # 测试单个频道
         print("=" * 60)
         print("测试单个频道：安徽卫视")
@@ -44,9 +49,9 @@ def main():
         test_channels = {
             'AHTV1': '安徽卫视',
             'BTV1': '北京卫视',
-            'HUNANTV': '湖南卫视',
-            'JSTV': '江苏卫视',
-            'ZJTV': '浙江卫视'
+            'HUNANTV1': '湖南卫视',
+            'JSTV1': '江苏卫视',
+            'ZJTV1': '浙江卫视'
         }
         
         satellite_programs = tm2.fetch_all_satellite_epg(channel_list=test_channels)
