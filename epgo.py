@@ -108,11 +108,11 @@ except ImportError as e:
     logger.error(f"导入ct模块失败: {e}")
 
 try:
-    import ctws
-    source_functions['ctws'] = fetch_ctws_programs
-    logger.info("成功导入ctws模块")
+    import tm2
+    source_functions['tm2'] = fetch_tm2_programs
+    logger.info("成功导入tm2模块")
 except ImportError as e:
-    logger.error(f"导入ctws模块失败: {e}")
+    logger.error(f"导入tm2模块失败: {e}")
 
 def generate_xmltv(programs_dict):
     # 使用北京时间(UTC+8)获取当天日期
@@ -428,3 +428,4 @@ if __name__ == "__main__":
         print(f"Error: {e}")
 
         traceback.print_exc()
+
