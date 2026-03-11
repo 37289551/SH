@@ -15,6 +15,7 @@ on:
           - model/test_tm.py
           - model/test_ct.py
           - model/test_epgo.py
+          - test_yangshipin_api.py
 
 jobs:
   test-source:
