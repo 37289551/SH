@@ -333,7 +333,7 @@ def fetch_province_epg(province_name, weekday=None, session=None):
     programs_dict = {}
     
     for channel_name, channel_code in channel_list.items():
-        channel_url = f"https://www.tvmao.com/program/{channel_code}"
+        channel_url = f"{B_PROGRAM}{channel_code}"
         
         logger.debug(f"获取频道 {channel_name} 的EPG: {channel_url}")
         
@@ -488,4 +488,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
