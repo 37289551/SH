@@ -130,23 +130,31 @@ def generate_url(channel_code, weekday=None):
 
 def parse_channel_name(soup):
     """从页面提取频道名称"""
-    # 方法1: 从title标签提取
+    # 方法1: 从h1标签提取（最可靠）
+    h1_tag = soup.find('h1')
+    if h1_tag:
+        h1_text = h1_tag.get_text().strip()
+        # 格式: "安徽卫视节目表"
+        logger.debug(f"H1标签内容: {h1_text}")
+        
+        # 提取"xxx卫视"或"xxx频道"
+        match = re.search(r'([^，,_，节目表预告\s]+)(卫视|频道)', h1_text)
+        if match:
+            channel_name = match.group(0)
+            logger.info(f"从H1提取频道名称: {channel_name}")
+            return channel_name
+    
+    # 方法2: 从title标签提取
     title_tag = soup.find('title')
     if title_tag:
         title_text = title_tag.get_text()
         # 格式: "安徽卫视节目表,安徽卫视节目预告_电视猫"
-        match = re.search(r'([^，,_]+)卫视', title_text)
+        logger.debug(f"title标签内容: {title_text}")
+        match = re.search(r'([^，,_，节目表预告\s]+)(卫视|频道)', title_text)
         if match:
-            return match.group(0) + '卫视'
-    
-    # 方法2: 从h1标签提取
-    h1_tag = soup.find('h1')
-    if h1_tag:
-        h1_text = h1_tag.get_text()
-        # 格式: "安徽卫视节目表"
-        match = re.search(r'([^，,_]+)卫视节目表', h1_text)
-        if match:
-            return match.group(0).replace('节目表', '')
+            channel_name = match.group(0)
+            logger.info(f"从title提取频道名称: {channel_name}")
+            return channel_name
     
     # 方法3: 从面包屑导航提取
     breadcrumb = soup.find('div', class_='breadcrumb')
@@ -154,8 +162,30 @@ def parse_channel_name(soup):
         links = breadcrumb.find_all('a')
         for link in links:
             text = link.get_text().strip()
-            if '卫视' in text:
+            logger.debug(f"面包屑链接: {text}")
+            if '卫视' in text or '频道' in text:
+                logger.info(f"从面包屑提取频道名称: {text}")
                 return text
+    
+    # 方法4: 查找页面中的所有文本，尝试匹配
+    all_text = soup.get_text()
+    # 尝试匹配第一个出现的 "xxx卫视" 或 "xxx频道"
+    patterns = [r'([^\s，,_]+卫视)', r'([^\s，,_]+频道)']
+    for pattern in patterns:
+        match = re.search(pattern, all_text)
+        if match:
+            channel_name = match.group(0)
+            # 排除一些非频道名称的匹配
+            if not any(x in channel_name for x in ['节目表', '节目预告', '电视猫', '卫视网']):
+                logger.info(f"从页面文本提取频道名称: {channel_name}")
+                return channel_name
+    
+    logger.warning("所有方法都无法提取频道名称")
+    # 调试输出页面结构
+    if h1_tag:
+        logger.warning(f"H1: {h1_tag}")
+    if title_tag:
+        logger.warning(f"title: {title_tag}")
     
     return None
 
@@ -172,13 +202,19 @@ def parse_program_items(soup):
     # 根据网页结构，节目通常在class包含"program"或"item"的容器中
     li_elements = soup.find_all('li')
     
-    for li in li_elements:
+    logger.debug(f"找到 {len(li_elements)} 个 <li> 元素")
+    
+    for i, li in enumerate(li_elements):
         text = li.get_text().strip()
         if not text:
             continue
         
         # 跳过明显不是节目的内容
-        if len(text) < 5 or '广告' in text or '预告' in text:
+        if len(text) < 5:
+            continue
+        
+        # 跳过时间段分组标题（如"凌晨节目"、"午间节目"、"晚间节目"等）
+        if any(x in text for x in ['节目', '播出', '时段', '节目表']):
             continue
         
         # 使用正则表达式匹配节目信息
@@ -200,7 +236,10 @@ def parse_program_items(soup):
                 'title': title,
                 'episode': episode
             })
+            
+            logger.debug(f"解析到节目 {i+1}: {time_str} - {title}")
     
+    logger.info(f"共解析到 {len(programs)} 个节目")
     return programs
 
 def fetch_channel_epg(channel_code, weekday=None):
@@ -331,6 +370,73 @@ def generate_xmltv(programs_dict):
 '''
     
     return xml_content
+
+def debug_page(channel_code, weekday=None):
+    """
+    调试模式：详细分析页面结构
+    
+    Args:
+        channel_code: 频道代号
+        weekday: 星期几，默认为当前星期
+    """
+    url = generate_url(channel_code, weekday)
+    print(f"\n{'='*60}")
+    print(f"调试模式: {url}")
+    print(f"{'='*60}")
+    
+    response = make_request(url)
+    if not response:
+        print(f"❌ 页面请求失败")
+        return
+    
+    soup = BeautifulSoup(response.text, 'html.parser')
+    
+    # 输出页面基本信息
+    print(f"\n📄 页面基本信息:")
+    print(f"  URL: {url}")
+    print(f"  状态码: {response.status_code}")
+    print(f"  页面大小: {len(response.text)} 字节")
+    
+    # 输出title
+    title_tag = soup.find('title')
+    if title_tag:
+        print(f"\n🏷️  Title标签: {title_tag.get_text()}")
+    
+    # 输出h1
+    h1_tags = soup.find_all('h1')
+    print(f"\n📌 H1标签 (共{len(h1_tags)}个):")
+    for i, h1 in enumerate(h1_tags, 1):
+        print(f"  {i}. {h1.get_text().strip()}")
+    
+    # 输出面包屑
+    breadcrumb = soup.find('div', class_='breadcrumb')
+    if breadcrumb:
+        print(f"\n🧭 面包屑导航:")
+        links = breadcrumb.find_all('a')
+        for link in links:
+            print(f"  - {link.get_text().strip()}: {link.get('href', '')}")
+    
+    # 提取频道名称
+    channel_name = parse_channel_name(soup)
+    print(f"\n✅ 提取的频道名称: {channel_name}")
+    
+    # 输出所有li元素（前10个）
+    li_elements = soup.find_all('li')
+    print(f"\n📋 LI元素 (共{len(li_elements)}个，显示前10个):")
+    for i, li in enumerate(li_elements[:10], 1):
+        text = li.get_text().strip()
+        if text:
+            print(f"  {i}. {text[:100]}")
+    
+    # 输出包含时间的li
+    print(f"\n⏰ 包含时间的节目 (前5个):")
+    time_pattern = re.compile(r'^\d{2}:\d{2}')
+    count = 0
+    for li in li_elements:
+        text = li.get_text().strip()
+        if time_pattern.match(text) and count < 5:
+            print(f"  {count+1}. {text}")
+            count += 1
 
 def main():
     """主函数"""
