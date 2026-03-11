@@ -214,18 +214,171 @@ def test_generate_xmltv():
         traceback.print_exc()
         return False
 
+def test_api_discovery():
+    """测试新发现的API接口"""
+    print(f"\n=== 测试API发现 ===")
+    print("测试新发现的央视频API接口...")
+
+    import requests
+
+    # 测试频道
+    pid = '600001859'  # CCTV-1
+    date_str = datetime.now().strftime('%Y%m%d')
+
+    # 新发现的API列表
+    new_apis = [
+        {
+            'name': 'capi yangshipin yspepg list (GET)',
+            'url': 'https://capi.yangshipin.cn/api/yspepg/program/list',
+            'params': {'cid': pid, 'date': date_str},
+            'method': 'GET'
+        },
+        {
+            'name': 'capi yangshipin yspepg list (POST)',
+            'url': 'https://capi.yangshipin.cn/api/yspepg/program/list',
+            'data': {'cid': pid, 'date': date_str},
+            'method': 'POST'
+        },
+        {
+            'name': 'capi yangshipin yspepg get',
+            'url': 'https://capi.yangshipin.cn/api/yspepg/program/get',
+            'params': {'cid': pid, 'date': date_str},
+            'method': 'GET'
+        }
+    ]
+
+    working_apis = []
+
+    for api in new_apis:
+        print(f"\n测试 {api['name']}...")
+        try:
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                'Accept': 'application/json',
+                'Referer': f'https://yangshipin.cn/tv/home?pid={pid}'
+            }
+
+            if api['method'] == 'POST':
+                response = requests.post(
+                    api['url'],
+                    json=api['data'],
+                    headers=headers,
+                    timeout=10
+                )
+            else:
+                response = requests.get(
+                    api['url'],
+                    params=api['params'],
+                    headers=headers,
+                    timeout=10
+                )
+
+            print(f"  状态码: {response.status_code}")
+
+            if response.status_code == 200:
+                try:
+                    data = response.json()
+
+                    # 检查是否有有效的节目数据
+                    has_programs = False
+                    if 'data' in data:
+                        if 'dataList' in data['data'] and data['data']['dataList']:
+                            has_programs = True
+                            print(f"  ✅ 找到 dataList: {len(data['data']['dataList'])} 个节目")
+                        elif 'programList' in data['data'] and data['data']['programList']:
+                            has_programs = True
+                            print(f"  ✅ 找到 programList: {len(data['data']['programList'])} 个节目")
+
+                    if has_programs:
+                        working_apis.append(api['name'])
+                        print(f"  ✅ {api['name']} 可用")
+                    else:
+                        print(f"  ⚠️  {api['name']} 响应正常但无节目数据")
+                except json.JSONDecodeError:
+                    print(f"  ❌ JSON解析失败")
+            else:
+                print(f"  ❌ HTTP错误")
+
+        except Exception as e:
+            print(f"  ❌ 请求失败: {e}")
+
+    if working_apis:
+        print(f"\n✅ 发现 {len(working_apis)} 个可用的API:")
+        for api_name in working_apis:
+            print(f"  - {api_name}")
+    else:
+        print(f"\n⚠️  未发现可用的API接口")
+
+    return len(working_apis) > 0
+
+
+def test_ci_environment():
+    """CI/CD环境测试：快速验证核心功能"""
+    print(f"\n=== CI/CD环境测试 ===")
+    print("执行快速功能验证...")
+
+    # 只测试核心功能，不进行实际的API调用（避免网络依赖）
+    test_results = []
+
+    # 测试1: PID提取
+    try:
+        result = ctws.extract_pid_from_url("https://yangshipin.cn/tv/home?pid=600001859")
+        if result == '600001859':
+            test_results.append(('PID提取', True))
+        else:
+            test_results.append(('PID提取', False))
+    except:
+        test_results.append(('PID提取', False))
+
+    # 测试2: 时间解析
+    try:
+        beijing_tz = timezone(timedelta(hours=8))
+        result = ctws.parse_program_time("08:30", "20260310", beijing_tz)
+        if result and result.strftime('%H:%M') == "08:30":
+            test_results.append(('时间解析', True))
+        else:
+            test_results.append(('时间解析', False))
+    except:
+        test_results.append(('时间解析', False))
+
+    # 测试3: XMLTV生成
+    try:
+        test_programs = [{'startTime': '08:00', 'endTime': '09:00', 'title': '测试节目'}]
+        xmltv = ctws.generate_xmltv({'CCTV-1': test_programs}, "20260310")
+        if xmltv and '<?xml' in xmltv and '<tv>' in xmltv:
+            test_results.append(('XMLTV生成', True))
+        else:
+            test_results.append(('XMLTV生成', False))
+    except:
+        test_results.append(('XMLTV生成', False))
+
+    # 输出结果
+    print()
+    for test_name, passed in test_results:
+        status = "✅" if passed else "❌"
+        print(f"{status} {test_name}")
+
+    all_passed = all(result[1] for result in test_results)
+
+    print(f"\nCI/CD测试结果: {'✅ 通过' if all_passed else '❌ 失败'}")
+    return all_passed
+
+
 def main():
     print("=== CTWS测试 ===")
     print(f"开始时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print()
-    
+
     # 创建参数解析器
     parser = argparse.ArgumentParser(description='测试CTWS央视频节目单抓取功能')
     parser.add_argument('--date', type=str, help='指定日期，格式为YYYYMMDD，如20260310')
     parser.add_argument('--channel', type=str, default='江苏卫视', help='指定测试频道名称')
     parser.add_argument('--pid', type=str, default='600002521', help='指定测试频道PID')
+    parser.add_argument('--ci', action='store_true', help='CI/CD模式：只测试核心功能，不调用API')
+    parser.add_argument('--api-test', action='store_true', help='测试新发现的API接口')
+    parser.add_argument('--full', action='store_true', help='完整测试模式（包括API调用）')
     args = parser.parse_args()
-    
+
     # 处理日期参数
     if args.date:
         date_str = args.date
@@ -234,62 +387,123 @@ def main():
         # 使用当前日期
         date_str = datetime.now().strftime('%Y%m%d')
         print(f"使用当前日期: {date_str}")
-    
+
     print(f"测试频道: {args.channel}")
     print(f"测试PID: {args.pid}")
+    print(f"测试模式: {'CI/CD快速测试' if args.ci else ('API测试' if args.api_test else '完整测试' if args.full else '标准测试')}")
     print()
-    
+
     # 运行测试
     try:
+        # 基础功能测试（所有模式都执行）
+        print("=== 基础功能测试 ===")
+        test_results = []
+
         # 1. 测试URL PID提取
-        test_extract_pid_from_url()
-        
+        result1 = test_extract_pid_from_url()
+        test_results.append(('URL PID提取', result1))
+
         # 2. 测试加载频道列表
-        test_load_channels_from_file()
-        
+        result2 = test_load_channels_from_file()
+        test_results.append(('加载频道列表', result2))
+
         # 3. 测试时间解析
-        test_parse_program_time()
-        
-        # 4. 测试从央视频获取节目单
+        result3 = test_parse_program_time()
+        test_results.append(('时间解析', result3))
+
+        # CI/CD模式：只测试基础功能
+        if args.ci:
+            result4 = test_ci_environment()
+            test_results.append(('CI/CD环境', result4))
+
+            # 输出总结
+            print(f"\n=== 测试总结 ===")
+            passed_count = sum(1 for _, passed in test_results if passed)
+            total_count = len(test_results)
+
+            for test_name, passed in test_results:
+                status = "✅" if passed else "❌"
+                print(f"{status} {test_name}")
+
+            all_passed = all(result[1] for result in test_results)
+            print(f"\n通过率: {passed_count}/{total_count} ({passed_count/total_count*100:.1f}%)")
+
+            print(f"\n=== 测试完成 ===")
+            print(f"结束时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+
+            if not all_passed:
+                sys.exit(1)
+            return
+
+        # API测试模式：只测试新发现的API
+        if args.api_test:
+            result5 = test_api_discovery()
+            test_results.append(('API发现', result5))
+
+            print(f"\n=== 测试完成 ===")
+            print(f"结束时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+            return
+
+        # 4. 测试从央视频获取节目单（非CI模式）
         test_programs = test_get_epg_from_yangshipin(args.channel, args.pid, date_str)
-        
+        test_results.append(('获取EPG', test_programs is not None))
+
         # 5. 测试XMLTV生成
-        test_generate_xmltv()
-        
-        # 6. 测试完整流程
-        print(f"\n=== 测试完整流程 ===")
-        print("开始完整流程测试...")
-        
-        # 使用硬编码的测试频道数据，不依赖外部文件
-        test_channels_data = {
-            'CCTV-1': '600001859',
-            '江苏卫视': '600002521',
-            '湖南卫视': '600002475'
-        }
-        print(f"✅ 加载了 {len(test_channels_data)} 个测试频道")
-        
-        # 测试所有测试频道
-        success_count = 0
-        fail_count = 0
-        
-        for channel_name, pid in test_channels_data.items():
-            print(f"\n正在测试 {channel_name}...")
-            programs = ctws.get_epg_from_yangshipin(channel_name, pid, date_str)
-            if programs:
-                success_count += 1
-                print(f"✅ 成功获取 {len(programs)} 个节目")
-            else:
-                fail_count += 1
-                print(f"❌ 获取节目单失败")
-        
-        print(f"\n完整流程测试结果:")
-        print(f"✅ 成功频道数: {success_count}")
-        print(f"❌ 失败频道数: {fail_count}")
-        
+        result6 = test_generate_xmltv()
+        test_results.append(('XMLTV生成', result6))
+
+        # 完整测试模式：测试多个频道
+        if args.full or not args.ci:
+            print(f"\n=== 测试完整流程 ===")
+            print("开始完整流程测试...")
+
+            # 使用硬编码的测试频道数据，不依赖外部文件
+            test_channels_data = {
+                'CCTV-1': '600001859',
+                'CCTV-2': '600001800',
+                'CCTV-3': '600001801',
+            }
+            print(f"✅ 加载了 {len(test_channels_data)} 个测试频道")
+
+            # 测试所有测试频道
+            success_count = 0
+            fail_count = 0
+
+            for channel_name, pid in test_channels_data.items():
+                print(f"\n正在测试 {channel_name}...")
+                programs = ctws.get_epg_from_yangshipin(channel_name, pid, date_str)
+                if programs:
+                    success_count += 1
+                    print(f"✅ 成功获取 {len(programs)} 个节目")
+                else:
+                    fail_count += 1
+                    print(f"❌ 获取节目单失败")
+
+            print(f"\n完整流程测试结果:")
+            print(f"✅ 成功频道数: {success_count}")
+            print(f"❌ 失败频道数: {fail_count}")
+
+            test_results.append(('完整流程', success_count > 0))
+
+        # 输出总结
+        print(f"\n=== 测试总结 ===")
+        passed_count = sum(1 for _, passed in test_results if passed)
+        total_count = len(test_results)
+
+        for test_name, passed in test_results:
+            status = "✅" if passed else "❌"
+            print(f"{status} {test_name}")
+
+        all_passed = all(result[1] for result in test_results)
+        print(f"\n通过率: {passed_count}/{total_count} ({passed_count/total_count*100:.1f}%)")
+
         print(f"\n=== 测试完成 ===")
         print(f"结束时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-        print(f"测试结果: {'✅ 成功' if success_count > 0 else '❌ 失败'}")
-        
+
+        if not all_passed:
+            print(f"⚠️  部分测试未通过")
+            sys.exit(1)
+
     except Exception as e:
         print(f"\n=== 测试失败 ===")
         print(f"错误信息: {e}")
