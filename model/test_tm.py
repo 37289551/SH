@@ -5,10 +5,12 @@ import sys
 import os
 from datetime import datetime
 
-# 添加当前目录到Python路径
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# 添加项目根目录到Python路径
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, project_root)
 
-from tvmao_epg import fetch_tvmao_programs, generate_xmltv
+# 从tm.py导入函数
+import tm
 
 def main():
     print("=== TM节目测试 ===")
@@ -18,10 +20,10 @@ def main():
     try:
         # 调用TVMao节目单抓取函数
         print("1. 央视节目单...")
-        cctv_programs = fetch_tvmao_programs('cctv')
+        cctv_programs = tm.fetch_tvmao_programs('cctv')
         
         print(f"2. 卫视频道节目单...")
-        satellite_programs = fetch_tvmao_programs('satellite')
+        satellite_programs = tm.fetch_tvmao_programs('satellite')
         
         # 合并节目单
         programs_dict = {}
@@ -46,7 +48,7 @@ def main():
         
         # 生成XMLTV文件
         print("=== 生成XMLTV文件 ===")
-        xmltv_content = generate_xmltv(programs_dict)
+        xmltv_content = tm.generate_xmltv(programs_dict)
         
         # 保存XMLTV文件
         output_dir = 'output'
