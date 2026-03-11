@@ -91,39 +91,193 @@ def get_epg_from_yangshipin(channel_name, pid, date_str):
         logger.warning(f"频道 {channel_name} 没有 pid，跳过")
         return None
 
-    # 构造API URL
-    #央视频的节目单API
-    api_url = f"https://api.yangshipin.cn/content/api/channel/getEpgInfo"
+    # 尝试多个可能的API接口
+    # 从app.js分析发现的真实API结构
+    api_candidates = [
+        # 方案1: 央视频官方EPG API（基于app.js分析）
+        {
+            'url': 'https://capi.yangshipin.cn/api/yspepg/program/list',
+            'params': {'cid': pid, 'date': date_str},
+            'desc': '方案1: capi yangshipin yspepg list接口',
+            'method': 'GET'
+        },
+        # 方案2: 央视频EPG API POST方式
+        {
+            'url': 'https://capi.yangshipin.cn/api/yspepg/program/list',
+            'data': {'cid': pid, 'date': date_str},
+            'desc': '方案2: capi yangshipin yspepg list POST接口',
+            'method': 'POST'
+        },
+        # 方案3: 测试环境API
+        {
+            'url': 'https://appdevteamtest.yangshipin.cn/api/yspepg/program/list',
+            'params': {'cid': pid, 'date': date_str},
+            'desc': '方案3: 测试环境 yspepg list接口',
+            'method': 'GET'
+        },
+        # 方案4: 新版API接口
+        {
+            'url': 'https://capi.yangshipin.cn/api/yspepg/program/get',
+            'params': {'cid': pid, 'date': date_str},
+            'desc': '方案4: capi yangshipin yspepg get接口',
+            'method': 'GET'
+        },
+        # 方案5: 预发布环境
+        {
+            'url': 'https://precapi.yangshipin.cn/api/yspepg/program/list',
+            'params': {'cid': pid, 'date': date_str},
+            'desc': '方案5: 预发布环境 yspepg list接口',
+            'method': 'GET'
+        },
+        # 方案6: 保留的推测接口作为备选
+        {
+            'url': 'https://api.yangshipin.cn/content/api/channel/getEpgInfo',
+            'params': {'pid': pid, 'date': date_str},
+            'desc': '方案6: getEpgInfo接口',
+            'method': 'GET'
+        },
+        # 方案7: 央视频直播页面API
+        {
+            'url': 'https://api.yangshipin.cn/content/channel/programList',
+            'params': {'pid': pid, 'date': date_str},
+            'desc': '方案7: programList接口',
+            'method': 'GET'
+        },
+        # 方案8: 央视官网风格API
+        {
+            'url': 'https://api.cctv.com/api/epg/epginfo',
+            'params': {'serviceId': f'tvcctv', 'c': pid, 'd': date_str, 't': 'json'},
+            'desc': '方案8: cctv.com epginfo接口',
+            'method': 'GET'
+        },
+    ]
 
-    try:
-        params = {
-            'pid': pid,
-            'date': date_str
-        }
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+        'Accept': 'application/json',
+        'Referer': f'https://yangshipin.cn/tv/home?pid={pid}',
+        'Origin': 'https://yangshipin.cn'
+    }
 
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-            'Accept': 'application/json',
-            'Referer': f'https://yangshipin.cn/tv/home?pid={pid}'
-        }
+    for api_config in api_candidates:
+        try:
+            logger.debug(f"尝试 {api_config['desc']}: {api_config['url']}")
 
-        response = requests.get(api_url, params=params, headers=headers, timeout=15)
-        response.raise_for_status()
+            # 根据配置选择请求方法
+            if api_config.get('method') == 'POST':
+                response = requests.post(
+                    api_config['url'],
+                    json=api_config.get('data', {}),
+                    headers=headers,
+                    timeout=15
+                )
+            else:
+                response = requests.get(
+                    api_config['url'],
+                    params=api_config.get('params', {}),
+                    headers=headers,
+                    timeout=15
+                )
+            response.raise_for_status()
 
-        data = response.json()
+            data = response.json()
 
-        # 检查响应结构
-        if 'data' in data and 'programList' in data['data']:
-            programs = data['data']['programList']
-            logger.info(f"成功获取 {channel_name} 的节目单，共 {len(programs)} 个节目")
-            return programs
-        else:
-            logger.warning(f"{channel_name} API返回的数据结构不符合预期: {data}")
-            return None
+            # 检查各种可能的响应结构
+            programs = None
 
-    except Exception as e:
-        logger.error(f"获取 {channel_name} 节目单失败: {e}")
-        return None
+            # 检查1: 标准的 programList 结构
+            if 'data' in data and 'programList' in data['data']:
+                programs = data['data']['programList']
+                logger.debug(f"找到 programList 结构")
+
+            # 检查2: 直接的 programList 结构
+            elif 'programList' in data:
+                programs = data['programList']
+                logger.debug(f"找到直接 programList 结构")
+
+            # 检查3: dataList 结构（央视频标准）
+            elif 'data' in data and 'dataList' in data['data']:
+                programs = data['data']['dataList']
+                logger.debug(f"找到 dataList 结构")
+
+            # 检查4: 直接 dataList 结构
+            elif 'dataList' in data:
+                programs = data['dataList']
+                logger.debug(f"找到直接 dataList 结构")
+
+            # 检查5: data 是列表
+            elif 'data' in data and isinstance(data['data'], list):
+                programs = data['data']
+                logger.debug(f"找到 data 列表结构")
+
+            # 检查6: 直接是列表
+            elif isinstance(data, list):
+                programs = data
+                logger.debug(f"找到直接列表结构")
+
+            # 检查7: list 结构
+            elif 'list' in data:
+                programs = data['list']
+                logger.debug(f"找到 list 结构")
+
+            # 检查8: programs 结构
+            elif 'programs' in data:
+                programs = data['programs']
+                logger.debug(f"找到 programs 结构")
+
+            # 检查9: epgData 结构
+            elif 'epgData' in data:
+                programs = data['epgData']
+                logger.debug(f"找到 epgData 结构")
+
+            # 检查10: epg_list 结构
+            elif 'epg_list' in data:
+                programs = data['epg_list']
+                logger.debug(f"找到 epg_list 结构")
+
+            # 检查11: data.items 结构
+            elif 'data' in data and 'items' in data['data']:
+                programs = data['data']['items']
+                logger.debug(f"找到 data.items 结构")
+
+            if programs:
+                # 转换节目数据为统一格式
+                standard_programs = []
+                for prog in programs:
+                    standard_prog = {
+                        'title': prog.get('title') or prog.get('name') or prog.get('programName') or '',
+                        'startTime': prog.get('startTime') or prog.get('start_time') or prog.get('start') or prog.get('time'),
+                        'endTime': prog.get('endTime') or prog.get('end_time') or prog.get('end')
+                    }
+                    if standard_prog['title']:
+                        standard_programs.append(standard_prog)
+
+                if standard_programs:
+                    logger.info(f"✓ {channel_name} 通过 {api_config['desc']} 成功获取，共 {len(standard_programs)} 个节目")
+                    return standard_programs
+                else:
+                    logger.warning(f"{api_config['desc']} 返回数据但无法解析节目列表")
+
+            # 检查是否有错误信息
+            if 'error' in data:
+                logger.warning(f"{api_config['desc']} 返回错误: {data['error']}")
+            elif 'errcode' in data:
+                logger.warning(f"{api_config['desc']} 返回错误码: {data.get('errcode')}, 信息: {data.get('msg', '无')}")
+            elif 'code' in data and data['code'] != 0:
+                logger.warning(f"{api_config['desc']} 返回错误码: {data['code']}, 信息: {data.get('message', data.get('msg', '无'))}")
+
+        except requests.exceptions.RequestException as e:
+            logger.debug(f"{api_config['desc']} 请求失败: {e}")
+            continue
+        except json.JSONDecodeError as e:
+            logger.debug(f"{api_config['desc']} JSON解析失败: {e}")
+            continue
+        except Exception as e:
+            logger.debug(f"{api_config['desc']} 处理失败: {e}")
+            continue
+
+    logger.error(f"所有API方案均失败，无法获取 {channel_name} 的节目单")
+    return None
 
 
 def generate_xmltv(programs_dict, target_date):
