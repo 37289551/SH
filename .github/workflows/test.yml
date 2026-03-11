@@ -11,11 +11,9 @@ on:
         type: choice
         options:
           - model/test_ts.py
-          - model/test_ctws.py
-          - model/test_tm.py
+          - model/test_tm2.py
           - model/test_ct.py
           - model/test_epgo.py
-          - test_yangshipin_api.py
 
 jobs:
   test-source:
