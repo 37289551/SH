@@ -14,32 +14,53 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # 导入 ctws 模块
 import ctws
 
-def test_extract_pid_from_url():
-    print(f"\n=== 测试从URL提取PID ===")
-    
-    # 测试用例
-    test_cases = [
-        ("https://yangshipin.cn/tv/home?pid=600001859", "600001859"),
-        ("https://yangshipin.cn/tv/home?pid=600002521&other=param", "600002521"),
-        ("https://yangshipin.cn/tv/home", None),
-        ("https://example.com", None)
-    ]
-    
-    all_passed = True
-    for url, expected_pid in test_cases:
-        result = ctws.extract_pid_from_url(url)
-        status = "✅" if result == expected_pid else "❌"
-        print(f"{status} {url}")
-        print(f"  提取结果: {result}, 预期: {expected_pid}")
-        if result != expected_pid:
-            all_passed = False
-    
-    if all_passed:
-        print(f"\n✅ 所有URL PID提取测试通过")
+def test_satellite_channels():
+    """测试内置卫视频道列表"""
+    print(f"\n=== 测试卫视频道列表 ===")
+
+    # 检查SATELLITE_CHANNELS是否存在且有数据
+    if hasattr(ctws, 'SATELLITE_CHANNELS'):
+        satellite_channels = ctws.SATELLITE_CHANNELS
+
+        if satellite_channels:
+            print(f"✅ 成功加载卫视频道列表")
+            print(f"✅ 共 {len(satellite_channels)} 个卫视频道")
+
+            # 验证几个主要频道
+            test_channels = ['湖南卫视', '江苏卫视', '浙江卫视']
+            all_found = all(channel in satellite_channels for channel in test_channels)
+
+            print("\n示例频道:")
+            for channel in test_channels:
+                if channel in satellite_channels:
+                    pid = satellite_channels[channel]
+                    print(f"  ✅ {channel}: {pid}")
+                else:
+                    print(f"  ❌ {channel}: 未找到")
+
+            # 验证PID格式
+            print(f"\n验证PID格式...")
+            all_valid = True
+            for channel_name, pid in satellite_channels.items():
+                if not pid or not pid.isdigit():
+                    print(f"  ❌ {channel_name} 的PID格式错误: {pid}")
+                    all_valid = False
+
+            if all_valid:
+                print(f"  ✅ 所有PID格式正确")
+
+            if all_found and all_valid:
+                print(f"\n✅ 卫视频道列表测试通过")
+                return True
+            else:
+                print(f"\n❌ 卫视频道列表测试失败")
+                return False
+        else:
+            print(f"❌ 卫视频道列表为空")
+            return False
     else:
-        print(f"\n❌ 部分URL PID提取测试失败")
-    
-    return all_passed
+        print(f"❌ ctws模块没有SATELLITE_CHANNELS属性")
+        return False
 
 def test_load_channels_from_file():
     print(f"\n=== 测试加载频道列表 ===")
@@ -320,15 +341,14 @@ def test_ci_environment():
     # 只测试核心功能，不进行实际的API调用（避免网络依赖）
     test_results = []
 
-    # 测试1: PID提取
+    # 测试1: 卫视频道列表
     try:
-        result = ctws.extract_pid_from_url("https://yangshipin.cn/tv/home?pid=600001859")
-        if result == '600001859':
-            test_results.append(('PID提取', True))
+        if hasattr(ctws, 'SATELLITE_CHANNELS') and ctws.SATELLITE_CHANNELS:
+            test_results.append(('卫视频道列表', True))
         else:
-            test_results.append(('PID提取', False))
+            test_results.append(('卫视频道列表', False))
     except:
-        test_results.append(('PID提取', False))
+        test_results.append(('卫视频道列表', False))
 
     # 测试2: 时间解析
     try:
@@ -399,13 +419,13 @@ def main():
         print("=== 基础功能测试 ===")
         test_results = []
 
-        # 1. 测试URL PID提取
-        result1 = test_extract_pid_from_url()
-        test_results.append(('URL PID提取', result1))
+        # 1. 测试卫视频道列表
+        result1 = test_satellite_channels()
+        test_results.append(('卫视频道列表', result1))
 
         # 2. 测试加载频道列表
         result2 = test_load_channels_from_file()
-        test_results.append(('加载频道列表', result2))
+        test_results.append(('加载频道文件', result2))
 
         # 3. 测试时间解析
         result3 = test_parse_program_time()
