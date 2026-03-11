@@ -59,9 +59,17 @@ PROVINCE_CODES = {
 
 def make_request(url, session=None, headers=None, retry=3, delay=2):
     """发送HTTP请求"""
+    # 随机选择用户代理，增加浏览器指纹多样性
+    user_agents = [
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0',
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_2) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15',
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0'
+    ]
+    
     if headers is None:
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'User-Agent': random.choice(user_agents),
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
             'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
             'Accept-Encoding': 'gzip, deflate, br',
@@ -74,7 +82,8 @@ def make_request(url, session=None, headers=None, retry=3, delay=2):
             'Referer': 'https://www.tvmao.com/',
             'DNT': '1',
             'Sec-Fetch-User': '?1',
-            'TE': 'trailers'
+            'TE': 'trailers',
+            'X-Requested-With': 'XMLHttpRequest'
         }
     
     request_func = session.get if session else requests.get
@@ -83,7 +92,16 @@ def make_request(url, session=None, headers=None, retry=3, delay=2):
         try:
             # 随机延迟，避免请求过于规律
             if attempt > 0:
-                time.sleep(delay * (attempt + 1) + random.uniform(0.5, 1.5))
+                wait_time = delay * (attempt + 1) + random.uniform(1, 3)
+                logger.info(f"等待 {wait_time:.1f} 秒后重试... ({attempt + 1}/{retry})")
+                time.sleep(wait_time)
+            else:
+                # 首次请求前也添加随机延迟
+                time.sleep(random.uniform(0.5, 1.5))
+            
+            # 随机修改请求头顺序，增加指纹多样性
+            if random.random() > 0.5:
+                headers['User-Agent'] = random.choice(user_agents)
             
             response = request_func(url, headers=headers, timeout=15, allow_redirects=True)
             response.raise_for_status()
@@ -92,8 +110,6 @@ def make_request(url, session=None, headers=None, retry=3, delay=2):
             if len(response.text) < 500:
                 logger.warning(f"响应体过小 ({len(response.text)} 字节), 可能被拦截: {url}")
                 if attempt < retry - 1:
-                    wait_time = delay * (attempt + 1)
-                    logger.info(f"等待 {wait_time} 秒后重试... ({attempt + 1}/{retry})")
                     continue
                 else:
                     logger.error(f"所有重试均失败: {url}")
@@ -102,8 +118,8 @@ def make_request(url, session=None, headers=None, retry=3, delay=2):
             return response
         except requests.RequestException as e:
             if attempt < retry - 1:
-                wait_time = delay * (attempt + 1)
-                logger.info(f"等待 {wait_time} 秒后重试... ({attempt + 1}/{retry}), 错误: {e}")
+                wait_time = delay * (attempt + 1) + random.uniform(1, 3)
+                logger.info(f"等待 {wait_time:.1f} 秒后重试... ({attempt + 1}/{retry}), 错误: {e}")
                 time.sleep(wait_time)
             else:
                 logger.error(f"所有重试均失败: {url}, 错误: {e}")
