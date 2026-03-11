@@ -32,7 +32,6 @@ def main():
         if epg_data:
             print(f"\n频道名称: {epg_data['channel']}")
             print(f"频道代码: {epg_data['code']}")
-            print(f"星期: {epg_data['weekday']}")
             print(f"节目数量: {len(epg_data['programs'])}")
             
             if epg_data['programs']:
@@ -45,13 +44,13 @@ def main():
         print("测试多个卫视频道（前5个）")
         print("=" * 60)
         
-        # 测试前5个频道
+        # 测试前5个频道（键为中文名，值为代码）
         test_channels = {
-            'AHTV1': '安徽卫视',
-            'BTV1': '北京卫视',
-            'HUNANTV1': '湖南卫视',
-            'JSTV1': '江苏卫视',
-            'ZJTV1': '浙江卫视'
+            '安徽卫视': 'AHTV1',
+            '北京卫视': 'BTV1',
+            '湖南卫视': 'HUNANTV1',
+            '江苏卫视': 'JSTV1',
+            '浙江卫视': 'ZJTV1'
         }
         
         satellite_programs = tm2.fetch_all_satellite_epg(channel_list=test_channels)
