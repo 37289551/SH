@@ -102,8 +102,18 @@ except ImportError as e:
 
 try:
     from tmdf import fetch_all_provinces_epg
-    def fetch_difang_programs():
-        provinces = ['北京', '上海', '广东', '浙江', '江苏', '湖南', '湖北']
+    def fetch_difang_programs(provinces=None):
+        if provinces is None:
+            # 从配置中读取省份列表
+            provinces = []
+            for source_config in CONFIG.get('sources', []):
+                if source_config.get('name') == 'difang':
+                    provinces = source_config.get('provinces', [])
+                    break
+            if not provinces:
+                provinces = ['北京', '上海', '广东', '浙江', '江苏', '湖南', '湖北']
+        
+        logger.info(f"开始抓取地方台节目单，省份: {provinces}")
         all_provinces_epg = fetch_all_provinces_epg(provinces)
         
         # 转换为标准格式
@@ -112,6 +122,7 @@ try:
             for channel_name, programs in province_epg.items():
                 programs_dict[channel_name] = programs
         
+        logger.info(f"地方台抓取完成，共获取 {len(programs_dict)} 个频道")
         return programs_dict
     
     source_functions['difang'] = fetch_difang_programs
@@ -296,13 +307,15 @@ def main():
         source_name = source_config['name']
         enabled = source_config.get('enabled', True)
         if enabled and source_name in source_functions:
-            sources.append((source_name, source_functions[source_name]))
+            # 提取省份配置（用于difang源）
+            provinces = source_config.get('provinces')
+            sources.append((source_name, source_functions[source_name], provinces))
 
     if not sources:
         sources = [
-            ('cctv', source_functions['cctv']),
-            ('weishi', source_functions['weishi']),
-            ('difang', source_functions['difang'])
+            ('cctv', source_functions['cctv'], None),
+            ('weishi', source_functions['weishi'], None),
+            ('difang', source_functions['difang'], None)
         ]
 
     success_threshold = CONFIG.get('success_threshold', 80.0)
@@ -310,7 +323,7 @@ def main():
 
     cctv_matched_count = 0
 
-    for source_name, source_func in sources:
+    for source_name, source_func, provinces in sources:
         if not source_func:
             logger.warning(f"跳过不可用的源: {source_name}")
             continue
@@ -354,24 +367,39 @@ def main():
                                     logger.info(f"  补充 {channel_name} 的节目单")
                 
                 source_programs = filtered_programs
+            elif source_name == 'difang':
+                source_programs = source_func(provinces)
             else:
                 source_programs = source_func()
             
             logger.info(f"{source_name} 源完成，获取到 {len(source_programs)} 个频道的节目单")
 
             standard_programs = {}
-            for channel_name, programs in source_programs.items():
-                matched_channel = match_channel(channel_name)
-                
-                if matched_channel:
-                    standard_programs[matched_channel] = {
-                        'name': CHANNELS[matched_channel]['name'],
+            
+            if source_name == 'difang':
+                # 地方台：不需要匹配标准频道，直接使用原始频道名
+                for channel_name, programs in source_programs.items():
+                    # 使用频道名作为ID（处理特殊字符）
+                    channel_id = channel_name.replace(' ', '_').replace('-', '_')
+                    standard_programs[channel_id] = {
+                        'name': channel_name,
                         'programs': programs
                     }
-                else:
-                    logger.debug(f"未找到匹配的频道: {channel_name}")
-            
-            logger.info(f"{source_name} 源匹配到 {len(standard_programs)} 个频道")
+                logger.info(f"{source_name} 源直接使用 {len(standard_programs)} 个地方台频道")
+            else:
+                # 央视/卫视：需要匹配标准频道列表
+                for channel_name, programs in source_programs.items():
+                    matched_channel = match_channel(channel_name)
+                    
+                    if matched_channel:
+                        standard_programs[matched_channel] = {
+                            'name': CHANNELS[matched_channel]['name'],
+                            'programs': programs
+                        }
+                    else:
+                        logger.debug(f"未找到匹配的频道: {channel_name}")
+                
+                logger.info(f"{source_name} 源匹配到 {len(standard_programs)} 个频道")
             
             if source_name == 'cctv':
                 cctv_matched_count = len(standard_programs)
@@ -379,10 +407,17 @@ def main():
             
             for channel_id, channel_data in standard_programs.items():
                 if channel_id in final_programs_dict:
+                    # 已存在频道，合并节目单
                     final_programs_dict[channel_id]['programs'] = merge_programs(
                         final_programs_dict[channel_id]['programs'],
                         channel_data['programs']
                     )
+                elif source_name == 'difang':
+                    # 地方台新频道，直接添加
+                    final_programs_dict[channel_id] = {
+                        'name': channel_data['name'],
+                        'programs': channel_data['programs']
+                    }
             
             current_rate = calculate_success_rate(final_programs_dict, total_channels)
             logger.info(f"当前成功率: {current_rate}%")
