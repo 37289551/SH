@@ -130,6 +130,19 @@ try:
 except ImportError as e:
     logger.error(f"导入tmdf模块失败: {e}")
 
+try:
+    from tm2 import fetch_all_satellite_epg
+    def fetch_tm2_programs():
+        logger.info("开始抓取tm2卫视节目单")
+        programs = fetch_all_satellite_epg()
+        logger.info(f"tm2抓取完成，共获取 {len(programs)} 个频道")
+        return programs
+    
+    source_functions['tm2'] = fetch_tm2_programs
+    logger.info("成功导入tm2模块")
+except ImportError as e:
+    logger.error(f"导入tm2模块失败: {e}")
+
 def generate_xmltv(programs_dict):
     # 使用北京时间(UTC+8)获取当天日期
     today = datetime.now(timezone(timedelta(hours=8))).strftime('%Y%m%d')
@@ -369,6 +382,9 @@ def main():
                 source_programs = filtered_programs
             elif source_name == 'difang':
                 source_programs = source_func(provinces)
+            elif source_name == 'tm2':
+                # tm2: 补充源，用于补充卫视频道
+                source_programs = source_func()
             else:
                 source_programs = source_func()
             
@@ -427,14 +443,15 @@ def main():
                         'programs': channel_data['programs']
                     }
             
-            # 成功率检查：地方台(difang)不受成功率限制，始终执行
-            if source_name != 'difang':
+            # 成功率检查：difang和tm2不受成功率限制，始终执行
+            if source_name in ['cctv', 'weishi']:
                 current_rate = calculate_success_rate(final_programs_dict, total_channels)
                 logger.info(f"当前成功率: {current_rate}%")
 
                 if current_rate >= success_threshold:
                     logger.info(f"成功率已达到 {success_threshold}% 以上，停止后续源的调用")
                     break
+            # difang 和 tm2 不参与成功率检查，始终执行
             
         except Exception as e:
             logger.error(f"使用 {source_name} 源抓取节目单失败: {e}", exc_info=True)
