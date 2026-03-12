@@ -200,16 +200,29 @@ def generate_xmltv(programs_dict):
     
     return pretty_xml
 
-def calculate_success_rate(programs_dict, total_channels):
+def calculate_success_rate(programs_dict, total_channels, channel_ids=None):
+    """
+    计算成功率
+    
+    Args:
+        programs_dict: 节目单字典
+        total_channels: 总频道数
+        channel_ids: 可选，只统计指定频道ID列表的成功率（用于排除difang新增的地方台）
+    """
     if total_channels == 0:
         return 0.0
 
     success_count = 0
     for channel_id, channel_data in programs_dict.items():
+        # 如果指定了channel_ids，只统计白名单内的频道
+        if channel_ids and channel_id not in channel_ids:
+            continue
         if len(channel_data['programs']) > 0:
             success_count += 1
     
-    success_rate = (success_count / total_channels) * 100
+    # 如果指定了channel_ids，使用白名单数量作为分母
+    count = len(channel_ids) if channel_ids else total_channels
+    success_rate = (success_count / count) * 100
     return round(success_rate, 2)
 
 def merge_programs(existing_programs, new_programs):
@@ -305,6 +318,7 @@ def main():
     logger.info("开始生成EPG...")
     
     total_channels = len(CHANNELS)
+    standard_channel_ids = set(CHANNELS.keys())  # 标准频道ID集合（用于成功率计算排除difang新增频道）
     logger.info(f"总共有 {total_channels} 个频道需要抓取")
 
     final_programs_dict = {}
@@ -444,8 +458,9 @@ def main():
                     }
             
             # 成功率检查：difang和tm2不受成功率限制，始终执行
+            # 传入standard_channel_ids排除difang新增的地方台频道
             if source_name in ['cctv', 'weishi']:
-                current_rate = calculate_success_rate(final_programs_dict, total_channels)
+                current_rate = calculate_success_rate(final_programs_dict, total_channels, standard_channel_ids)
                 logger.info(f"当前成功率: {current_rate}%")
 
                 if current_rate >= success_threshold:
@@ -477,7 +492,7 @@ def main():
         else:
             logger.warning(f"频道 {channel_data['name']} 未抓取到任何节目")
     
-    final_rate = calculate_success_rate(final_programs_dict, total_channels)
+    final_rate = calculate_success_rate(final_programs_dict, total_channels, standard_channel_ids)
     logger.info(f"最终成功率: {final_rate}%")
     logger.info(f"共抓取 {total_programs} 个节目")
 
