@@ -378,14 +378,22 @@ def main():
             
             if source_name == 'difang':
                 # 地方台：不需要匹配标准频道，直接使用原始频道名
+                # 过滤掉节目单为空的频道
+                valid_count = 0
+                empty_count = 0
                 for channel_name, programs in source_programs.items():
+                    # 跳过节目单为空的频道
+                    if not programs or len(programs) == 0:
+                        empty_count += 1
+                        continue
                     # 使用频道名作为ID（处理特殊字符）
                     channel_id = channel_name.replace(' ', '_').replace('-', '_')
                     standard_programs[channel_id] = {
                         'name': channel_name,
                         'programs': programs
                     }
-                logger.info(f"{source_name} 源直接使用 {len(standard_programs)} 个地方台频道")
+                    valid_count += 1
+                logger.info(f"{source_name} 源: 有效 {valid_count} 个频道, 丢弃空节目 {empty_count} 个")
             else:
                 # 央视/卫视：需要匹配标准频道列表
                 for channel_name, programs in source_programs.items():
