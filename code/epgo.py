@@ -419,12 +419,14 @@ def main():
                         'programs': channel_data['programs']
                     }
             
-            current_rate = calculate_success_rate(final_programs_dict, total_channels)
-            logger.info(f"当前成功率: {current_rate}%")
+            # 成功率检查：地方台(difang)不受成功率限制，始终执行
+            if source_name != 'difang':
+                current_rate = calculate_success_rate(final_programs_dict, total_channels)
+                logger.info(f"当前成功率: {current_rate}%")
 
-            if current_rate >= success_threshold:
-                logger.info(f"成功率已达到 {success_threshold}% 以上，停止后续源的调用")
-                break
+                if current_rate >= success_threshold:
+                    logger.info(f"成功率已达到 {success_threshold}% 以上，停止后续源的调用")
+                    break
             
         except Exception as e:
             logger.error(f"使用 {source_name} 源抓取节目单失败: {e}", exc_info=True)
