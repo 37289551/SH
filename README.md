@@ -2,7 +2,7 @@
 
 ## 项目简介
 
-EPG（Electronic Program Guide）电子节目单生成工具，用于从多个数据源抓取电视节目单，并生成统一格式的XMLTV文件，供各种IPTV播放器使用。
+EPG（Electronic Program Guide）电子节目单生成工具，用于从多个数据源抓取电视节目单。
 
 ## 功能特性
 
