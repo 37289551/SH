@@ -220,7 +220,6 @@ jobs:
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
         
         # 复制文件
-        cp index.html ./
         if [ -f epg.gz ]; then
           mkdir -p output
           cp epg.gz output/
