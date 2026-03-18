@@ -96,9 +96,12 @@ jobs:
     - name: 检出代码
       uses: actions/checkout@v4
       with:
-        ref: gh-pages
         fetch-depth: 0
         persist-credentials: false
+
+    - name: 创建/切换到 gh-pages 分支
+      run: |
+        git checkout gh-pages 2>/dev/null || git checkout -b gh-pages
 
     - name: 下载 artifacts
       uses: actions/download-artifact@v4
@@ -215,9 +218,6 @@ jobs:
         # 配置git用户信息
         git config --global user.name "github-actions[bot]"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
-        
-        # 如果gh-pages分支不存在则创建
-        git checkout gh-pages 2>/dev/null || git checkout -b gh-pages
         
         # 复制文件
         cp index.html ./
