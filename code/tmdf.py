@@ -20,38 +20,40 @@ logger.addHandler(file_handler)
 B_PROGRAM = os.environ['B_PROGRAM']
 TM_REFERER = os.environ['TM_REFERER']
 
+# 支持一个省份多个code映射
+# code 可以是单个字符串或字符串列表
 PROVINCE_CODES = {
-    '天津': {'code': 'TJTV', 'provId': '120000'},
-    '江苏': {'code': 'JSTV', 'provId': '320000'},
-    '江西': {'code': 'JXTV', 'provId': '360000'},
-    '广东': {'code': 'GDTV', 'provId': '440000'},
-    '贵州': {'code': 'GUIZOUTV', 'provId': '520000'},
-    '宁夏': {'code': 'NXTV', 'provId': '640000'},
-    '河北': {'code': 'HEBEI', 'provId': '130000'},
-    '辽宁': {'code': 'LNTV', 'provId': '210000'},
-    '浙江': {'code': 'ZJTV', 'provId': '330000'},
-    '山东': {'code': 'SDTV', 'provId': '370000'},
-    '河南': {'code': 'HNTV', 'provId': '410000'},
-    '广西': {'code': 'GUANXI', 'provId': '450000'},
-    '云南': {'code': 'YNTV', 'provId': '530000'},
-    '陕西': {'code': 'SHXITV', 'provId': '610000'},
-    '新疆': {'code': 'XJTV', 'provId': '650000'},
-    '山西': {'code': 'SXTV', 'provId': '140000'},
-    '吉林': {'code': 'JILIN', 'provId': '220000'},
-    '安徽': {'code': 'AHTV', 'provId': '340000'},
-    '湖北': {'code': 'HUBEI', 'provId': '420000'},
-    '海南': {'code': 'TCTC', 'provId': '460000'},
-    '重庆': {'code': 'CCQTV', 'provId': '500000'},
-    '西藏': {'code': 'XIZANGTV', 'provId': '540000'},
-    '甘肃': {'code': 'GSTV', 'provId': '620000'},
-    '北京': {'code': 'BTV', 'provId': '110000'},
-    '内蒙': {'code': 'NMGTV', 'provId': '150000'},
-    '黑龙': {'code': 'HLJTV', 'provId': '230000'},
-    '上海': {'code': 'DFMV', 'provId': '310000'},
-    '福建': {'code': 'FJTV', 'provId': '350000'},
-    '湖南': {'code': 'HUNANTV', 'provId': '430000'},
-    '四川': {'code': 'SCTV', 'provId': '510000'},
-    '青海': {'code': 'QHTV', 'provId': '630000'},
+    '天津': {'code': ['TJTV'], 'provId': '120000'},
+    '江苏': {'code': ['JSTV'], 'provId': '320000'},
+    '江西': {'code': ['JXTV'], 'provId': '360000'},
+    '广东': {'code': ['GDTV'], 'provId': '440000'},
+    '贵州': {'code': ['GUIZOUTV'], 'provId': '520000'},
+    '宁夏': {'code': ['NXTV'], 'provId': '640000'},
+    '河北': {'code': ['HEBEI'], 'provId': '130000'},
+    '辽宁': {'code': ['LNTV'], 'provId': '210000'},
+    '浙江': {'code': ['ZJTV'], 'provId': '330000'},
+    '山东': {'code': ['SDTV'], 'provId': '370000'},
+    '河南': {'code': ['HNTV'], 'provId': '410000'},
+    '广西': {'code': ['GUANXI'], 'provId': '450000'},
+    '云南': {'code': ['YNTV'], 'provId': '530000'},
+    '陕西': {'code': ['SHXITV'], 'provId': '610000'},
+    '新疆': {'code': ['XJTV'], 'provId': '650000'},
+    '山西': {'code': ['SXTV'], 'provId': '140000'},
+    '吉林': {'code': ['JILIN'], 'provId': '220000'},
+    '安徽': {'code': ['AHTV'], 'provId': '340000'},
+    '湖北': {'code': ['HUBEI'], 'provId': '420000'},
+    '海南': {'code': ['TCTC'], 'provId': '460000'},
+    '重庆': {'code': ['CCQTV'], 'provId': '500000'},
+    '西藏': {'code': ['XIZANGTV'], 'provId': '540000'},
+    '甘肃': {'code': ['GSTV'], 'provId': '620000'},
+    '北京': {'code': ['BTV'], 'provId': '110000'},
+    '内蒙': {'code': ['NMGTV'], 'provId': '150000'},
+    '黑龙': {'code': ['HLJTV'], 'provId': '230000'},
+    '上海': {'code': ['SHHAI'], 'provId': '310000'},
+    '福建': {'code': ['FJTV'], 'provId': '350000'},
+    '湖南': {'code': ['HNETV', 'HNETV2', 'HNETV3'], 'provId': '430000'},
+    '四川': {'code': ['SCTV'], 'provId': '510000'},
+    '青海': {'code': ['QHTV'], 'provId': '630000'},
 }
 
 def make_request(url, session=None, headers=None, retry=0, delay=2):
@@ -192,7 +194,7 @@ def parse_channel_name(soup):
         match = re.search(r'([^，,_，节目表预告\s]+)(卫视|频道|电视台)', h1_text)
         if match:
             channel_name = match.group(0)
-            channel_name = re.sub(r'电视台|广播|频道', '', channel_name)
+            channel_name = re.sub(r'电视台|广播|频道|BRTV', '', channel_name)
             logger.info(f"从H1提取频道名称: {channel_name}")
             return channel_name
     
@@ -203,7 +205,7 @@ def parse_channel_name(soup):
         match = re.search(r'([^，,_，节目表预告\s]+)(卫视|频道)', title_text)
         if match:
             channel_name = match.group(0)
-            channel_name = re.sub(r'电视台|广播|频道', '', channel_name)
+            channel_name = re.sub(r'电视台|广播|频道|BRTV', '', channel_name)
             logger.info(f"从title提取频道名称: {channel_name}")
             return channel_name
     
@@ -283,25 +285,32 @@ def fetch_province_channels(province_name, weekday=None, session=None):
         return {}
     
     province_info = PROVINCE_CODES[province_name]
-    province_code = province_info['code']
+    # 支持单个code或code列表
+    codes = province_info['code']
+    if isinstance(codes, str):
+        codes = [codes]
     
-    url = generate_url_with_weekday(province_code, weekday)
-    logger.info(f"正在获取 {province_name} 的频道列表: {url}")
+    all_channels = {}
+    for province_code in codes:
+        url = generate_url_with_weekday(province_code, weekday)
+        logger.info(f"正在获取 {province_name} ({province_code}) 的频道列表: {url}")
 
-    response = make_request(url, session=session)
-    if not response:
-        logger.warning(f"获取失败: {province_name}")
-        return {}
+        response = make_request(url, session=session)
+        if not response:
+            logger.warning(f"获取失败: {province_name} ({province_code})")
+            continue
+        
+        soup = BeautifulSoup(response.text, 'html.parser')
+        
+        channel_list = parse_channel_list(soup, province_name)
+        
+        if channel_list:
+            all_channels.update(channel_list)
+            logger.info(f"{province_name} ({province_code}) 获取到 {len(channel_list)} 个频道")
+        else:
+            logger.warning(f"未找到 {province_name} ({province_code}) 的频道列表")
     
-    soup = BeautifulSoup(response.text, 'html.parser')
-    
-    channel_list = parse_channel_list(soup, province_name)
-    
-    if not channel_list:
-        logger.warning(f"未找到 {province_name} 的频道列表")
-        return {}
-    
-    return channel_list
+    return all_channels
 
 def fetch_province_epg(province_name, weekday=None, session=None):
     if province_name not in PROVINCE_CODES:
@@ -309,55 +318,64 @@ def fetch_province_epg(province_name, weekday=None, session=None):
         return {}
     
     province_info = PROVINCE_CODES[province_name]
-    province_code = province_info['code']
+    # 支持单个code或code列表
+    codes = province_info['code']
+    if isinstance(codes, str):
+        codes = [codes]
     
     if weekday is None:
         weekday = get_current_weekday()
     
-    url = f"{B_PROGRAM}{province_code}"
-    logger.info(f"正在获取 {province_name} 的EPG数据: {url}")
+    all_programs = {}
+    
+    for province_code in codes:
+        url = f"{B_PROGRAM}{province_code}"
+        logger.info(f"正在获取 {province_name} ({province_code}) 的EPG数据: {url}")
 
-    response = make_request(url, session=session)
-    if not response:
-        logger.warning(f"获取失败: {province_name}")
-        return {}
-    
-    soup = BeautifulSoup(response.text, 'html.parser')
-    
-    channel_list = parse_channel_list(soup, province_name)
-    
-    if not channel_list:
-        logger.warning(f"未找到 {province_name} 的频道列表")
-        return {}
-    
-    programs_dict = {}
-    
-    for channel_name, channel_code in channel_list.items():
-        channel_url = f"{B_PROGRAM}{channel_code}"
-        
-        logger.debug(f"获取频道 {channel_name} 的EPG: {channel_url}")
-        
-        channel_response = make_request(channel_url, session=session)
-        if not channel_response:
+        response = make_request(url, session=session)
+        if not response:
+            logger.warning(f"获取失败: {province_name} ({province_code})")
             continue
         
-        channel_soup = BeautifulSoup(channel_response.text, 'html.parser')
+        soup = BeautifulSoup(response.text, 'html.parser')
         
-        parsed_name = parse_channel_name(channel_soup)
-        if not parsed_name:
-            logger.warning(f"无法提取频道名称: {channel_code}")
-            parsed_name = channel_name
+        channel_list = parse_channel_list(soup, province_name)
         
-        programs = parse_program_items(channel_soup)
+        if not channel_list:
+            logger.warning(f"未找到 {province_name} ({province_code}) 的频道列表")
+            continue
         
-        if programs:
-            programs_dict[parsed_name] = programs
-            logger.info(f"成功获取 {parsed_name} 的 {len(programs)} 个节目")
+        programs_dict = {}
         
-        time.sleep(1)
+        for channel_name, channel_code in channel_list.items():
+            channel_url = f"{B_PROGRAM}{channel_code}"
+            
+            logger.debug(f"获取频道 {channel_name} 的EPG: {channel_url}")
+            
+            channel_response = make_request(channel_url, session=session)
+            if not channel_response:
+                continue
+            
+            channel_soup = BeautifulSoup(channel_response.text, 'html.parser')
+            
+            parsed_name = parse_channel_name(channel_soup)
+            if not parsed_name:
+                logger.warning(f"无法提取频道名称: {channel_code}")
+                parsed_name = channel_name
+            
+            programs = parse_program_items(channel_soup)
+            
+            if programs:
+                programs_dict[parsed_name] = programs
+                logger.info(f"成功获取 {parsed_name} 的 {len(programs)} 个节目")
+            
+            time.sleep(1)
+        
+        all_programs.update(programs_dict)
+        logger.info(f"{province_name} ({province_code}) 完成！成功获取 {len(programs_dict)} 个频道的EPG数据")
     
-    logger.info(f"{province_name} 完成！成功获取 {len(programs_dict)} 个频道的EPG数据")
-    return programs_dict
+    logger.info(f"{province_name} 总计完成！成功获取 {len(all_programs)} 个频道的EPG数据")
+    return all_programs
 
 def fetch_all_provinces_epg(province_list=None, weekday=None):
     if province_list is None:
