@@ -51,7 +51,7 @@ PROVINCE_CODES = {
     '黑龙': {'code': ['HLJTV'], 'provId': '230000'},
     '上海': {'code': ['SHHAI'], 'provId': '310000'},
     '福建': {'code': ['FJTV'], 'provId': '350000'},
-    '湖南': {'code': ['HNETV', 'HNETV2', 'HNETV3'], 'provId': '430000'},
+    '湖南': {'code': ['HUNANTV', 'HNETV'], 'provId': '430000'},
     '四川': {'code': ['SCTV'], 'provId': '510000'},
     '青海': {'code': ['QHTV'], 'provId': '630000'},
 }
