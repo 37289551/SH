@@ -72,7 +72,7 @@ jobs:
       id: get-prefix
       run: |
         # 从gfast.txt获取镜像前缀
-        PREFIX=$(curl -s https://jerome158.github.com/gfast/output/gfast.txt | head -n 1)
+        PREFIX=$(curl -s https://raw.githubusercontent.com/jerome158/gitfast/main/gitfast.txt | head -n 1)
         echo "镜像前缀: $PREFIX"
         echo "prefix=$PREFIX" >> $GITHUB_OUTPUT
 
@@ -99,7 +99,7 @@ jobs:
     - name: 获取镜像前缀
       id: get-prefix
       run: |
-        PREFIX=$(curl -s https://jerome158.github.com/gfast/output/gfast.txt | head -n 1)
+        PREFIX=$(curl -s https://raw.githubusercontent.com/jerome158/gitfast/main/gitfast.txt | head -n 1)
         echo "镜像前缀: $PREFIX"
         echo "prefix=$PREFIX" >> $GITHUB_OUTPUT
 
