@@ -1,5 +1,8 @@
 name: EPGO
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 on:
   schedule:
     - cron: '15 16 * * *'
@@ -71,7 +74,7 @@ jobs:
     - name: 获取镜像前缀
       id: get-prefix
       run: |
-        # 从gfast.txt获取镜像前缀
+        # 从gfast.txt获取镜像前缀 (使用raw链接)
         PREFIX=$(curl -s https://github.com/jerome158/CHN/raw/refs/heads/main/gitfast/gitfast.txt | head -n 1)
         echo "镜像前缀: $PREFIX"
         echo "prefix=$PREFIX" >> $GITHUB_OUTPUT
@@ -90,6 +93,13 @@ jobs:
       contents: write
     
     steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+      with:
+        ref: gh-pages
+        fetch-depth: 0
+        persist-credentials: false
+
     - name: 下载 artifacts
       uses: actions/download-artifact@v4
       with:
@@ -99,7 +109,7 @@ jobs:
     - name: 获取镜像前缀
       id: get-prefix
       run: |
-        PREFIX=$(curl -s https://github.com/jerome158/CHN/raw/refs/heads/main/gitfast/gitfast.txt | head -n 1)
+        PREFIX=$(curl -s https://github.com/jerome158/CHN/raw/refs/heads/main/gitfast/gitfast.txt| head -n 1)
         echo "镜像前缀: $PREFIX"
         echo "prefix=$PREFIX" >> $GITHUB_OUTPUT
 
@@ -206,7 +216,7 @@ jobs:
         git config --global user.name "github-actions[bot]"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
         
-        # 尝试克隆gh-pages分支，如果不存在则创建
+        # 如果gh-pages分支不存在则创建
         git checkout gh-pages 2>/dev/null || git checkout -b gh-pages
         
         # 复制文件
