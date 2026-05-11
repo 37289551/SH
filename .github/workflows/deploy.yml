@@ -186,4 +186,5 @@ jobs:
         git commit -m "更新EPG下载页面 $(date +'%Y-%m-%d')" || echo "没有更改需要提交"
         
         # 推送到gh-pages
-        git push --force origin gh-pages
+        git push --force https://x-access-token:${{ secrets.DEPLOY_TOKEN }}@github.com/${{ github.repository }}.git gh-pages
+
