@@ -214,6 +214,8 @@ jobs:
         echo "HTML页面已生成"
 
     - name: 部署到 GitHub Pages
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         # 配置git用户信息
         git config --global user.name "github-actions[bot]"
@@ -230,4 +232,4 @@ jobs:
         git commit -m "更新EPG下载页面 $(date +'%Y-%m-%d')" || echo "没有更改需要提交"
         
         # 推送到gh-pages
-        git push --force origin gh-pages
+        git push --force https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git gh-pages
